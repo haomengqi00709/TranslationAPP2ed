@@ -1,0 +1,132 @@
+{
+  "entries": [
+    {
+      "source": "Senate",
+      "target": "Sénat",
+      "context": null,
+      "case_sensitive": true,
+      "notes": "Canadian Senate (upper house)",
+      "priority": 10
+    },
+    {
+      "source": "House of Commons",
+      "target": "Chambre des communes",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 10
+    },
+    {
+      "source": "Parliament",
+      "target": "Parlement",
+      "context": null,
+      "case_sensitive": true,
+      "notes": null,
+      "priority": 10
+    },
+    {
+      "source": "federal government",
+      "target": "gouvernement fédéral",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 8
+    },
+    {
+      "source": "provincial government",
+      "target": "gouvernement provincial",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 8
+    },
+    {
+      "source": "municipal government",
+      "target": "gouvernement municipal",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 8
+    },
+    {
+      "source": "invisible disability",
+      "target": "handicap invisible",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 9
+    },
+    {
+      "source": "accommodation",
+      "target": "mesure d'adaptation",
+      "context": "disability",
+      "case_sensitive": false,
+      "notes": "In disability context, not housing",
+      "priority": 9
+    },
+    {
+      "source": "accommodation request",
+      "target": "demande de mesure d'adaptation",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 9
+    },
+    {
+      "source": "assessment",
+      "target": "évaluation",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 5
+    },
+    {
+      "source": "wait time",
+      "target": "temps d'attente",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 5
+    },
+    {
+      "source": "implementation",
+      "target": "mise en œuvre",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 5
+    },
+    {
+      "source": "employee",
+      "target": "employé",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 3
+    },
+    {
+      "source": "employer",
+      "target": "employeur",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 3
+    },
+    {
+      "source": "manager",
+      "target": "gestionnaire",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 3
+    },
+    {
+      "source": "workplace",
+      "target": "milieu de travail",
+      "context": null,
+      "case_sensitive": false,
+      "notes": null,
+      "priority": 3
+    }
+  ]
+}

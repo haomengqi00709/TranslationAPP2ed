@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Translation API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: translation-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount directories for persistence
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+      - ./temp:/app/temp
+      - ./logs:/app/logs
+      - ./glossary.json:/app/glossary.json:ro
+    environment:
+      # Translation settings
+      - TRANSLATOR_TYPE=local
+      - SOURCE_LANGUAGE=English
+      - TARGET_LANGUAGE=French
+
+      # BERT settings
+      - BERT_DEVICE=cpu
+      - BERT_MODEL_NAME=sentence-transformers/LaBSE
+
+      # API keys (if using cloud translators)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # Logging
+      - LOG_LEVEL=INFO
+
+    # Uncomment to enable GPU support (requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis (for job queue - optional for now)
+  # Uncomment when ready to implement Redis-based job queue
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: translation-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   restart: unless-stopped
+
+# volumes:
+#   redis-data:

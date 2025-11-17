@@ -1,0 +1,71 @@
+# RunPod Serverless Dockerfile
+# Optimized for fast cold starts and GPU efficiency
+
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    BERT_DEVICE=cuda \
+    TRANSLATOR_TYPE=local
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3-pip \
+    build-essential \
+    cmake \
+    git \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Note: fast_align should be copied from parent directory
+# Since Docker can't access parent dirs, we'll install it differently
+# Option 1: Clone from git
+RUN git clone https://github.com/clab/fast_align.git && \
+    cd fast_align && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    cp fast_align atools /usr/local/bin/ && \
+    cd /app && \
+    rm -rf fast_align
+
+# Option 2: If you prefer to copy local fast_align,
+# you need to run docker build from parent directory instead:
+# cd /Users/jasonhao/Desktop/fast_align_test
+# docker build -f translationAPP_2ed/Dockerfile.runpod -t yourimage:tag .
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install RunPod SDK
+RUN pip install --no-cache-dir runpod
+
+# Pre-download BERT model (saves time on cold starts)
+RUN python3 -c "from transformers import AutoTokenizer, AutoModel; \
+    model_name='sentence-transformers/LaBSE'; \
+    AutoTokenizer.from_pretrained(model_name); \
+    AutoModel.from_pretrained(model_name)"
+
+# Pre-download local LLM model (if using Qwen)
+# Uncomment if you want to bundle the LLM in the image
+# RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+#     model_name='Qwen/Qwen2.5-7B-Instruct'; \
+#     AutoTokenizer.from_pretrained(model_name); \
+#     AutoModelForCausalLM.from_pretrained(model_name)"
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p temp logs
+
+# Set the handler
+CMD ["python3", "runpod_handler.py"]
