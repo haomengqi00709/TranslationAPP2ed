@@ -17,7 +17,7 @@ TRANSLATOR_TYPE = "local"
 # ============================================================================
 
 # OpenAI Configuration
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = "gpt-4o-mini"  # Options: gpt-4, gpt-4o, gpt-4o-mini, gpt-3.5-turbo
 OPENAI_TEMPERATURE = 0.3
 OPENAI_MAX_TOKENS = 500

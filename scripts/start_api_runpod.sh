@@ -9,10 +9,16 @@ echo "Backend: RunPod Serverless"
 echo "=========================================="
 echo ""
 
-# Set RunPod configuration
-export USE_RUNPOD=true
-export RUNPOD_ENDPOINT_ID="io6lj6wjt80mqe"
-export RUNPOD_API_KEY="rpa_3O2QGMN26HIIKM3L345AXOB3MH3XWX0N14KZX9TJ13ggys"
+# Load environment variables from .env file
+if [ -f .env ]; then
+    echo "Loading environment variables from .env file..."
+    export $(grep -v '^#' .env | xargs)
+else
+    echo "⚠️  Warning: .env file not found!"
+    echo "Please create .env file with your API keys"
+    echo "See .env.example for template"
+    exit 1
+fi
 
 # Activate virtual environment
 source myenv/bin/activate
