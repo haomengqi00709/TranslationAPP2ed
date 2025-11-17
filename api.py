@@ -25,8 +25,9 @@ from pydantic import BaseModel
 try:
     from pipeline import TranslationPipeline
     PIPELINE_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Pipeline not available (missing dependencies: {e}). Only RunPod proxy mode will work.")
+except ImportError:
+    # Pipeline not available (missing torch/transformers)
+    # This is expected on Railway - it only runs RunPod proxy mode
     TranslationPipeline = None
     PIPELINE_AVAILABLE = False
 
