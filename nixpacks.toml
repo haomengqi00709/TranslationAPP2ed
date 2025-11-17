@@ -1,11 +1,9 @@
 # Nixpacks configuration for Railway deployment
 # Tells Railway to use lightweight requirements file
 
-[providers.python]
-version = "3.10"
+providers = ["python"]
 
 [phases.install]
-dependsOn = ["setup"]
 cmds = ["pip install -r requirements-railway.txt"]
 
 [start]
