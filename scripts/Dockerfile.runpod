@@ -41,9 +41,9 @@ RUN git clone https://github.com/clab/fast_align.git && \
 # cd /Users/jasonhao/Desktop/fast_align_test
 # docker build -f translationAPP_2ed/Dockerfile.runpod -t yourimage:tag .
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies (use full requirements for RunPod)
+COPY requirements-full.txt .
+RUN pip install --no-cache-dir -r requirements-full.txt
 
 # Install RunPod SDK
 RUN pip install --no-cache-dir runpod
