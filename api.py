@@ -20,7 +20,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # Import pipeline components
-from pipeline import TranslationPipeline
+# Pipeline needs torch - only available when running with full ML stack
+# (Not needed on Railway proxy mode - only forwards to RunPod)
+try:
+    from pipeline import TranslationPipeline
+    PIPELINE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Pipeline not available (missing dependencies: {e}). Only RunPod proxy mode will work.")
+    TranslationPipeline = None
+    PIPELINE_AVAILABLE = False
+
 from glossary import TerminologyGlossary
 import config
 
@@ -208,6 +217,12 @@ def process_translation(
             # ==================================================================
             # Local Mode: Run pipeline locally
             # ==================================================================
+            if not PIPELINE_AVAILABLE:
+                raise RuntimeError(
+                    "Pipeline not available (missing ML dependencies). "
+                    "Either set USE_RUNPOD=true or install full dependencies: pip install -r requirements-full.txt"
+                )
+
             jobs[job_id]["message"] = "Initializing pipeline..."
 
             # Initialize pipeline
