@@ -75,8 +75,8 @@ In Railway dashboard, add these environment variables:
 
 ```
 USE_RUNPOD=true
-RUNPOD_ENDPOINT_ID=io6lj6wjt80mqe
-RUNPOD_API_KEY=rpa_3O2QGMN26HIIKM3L345AXOB3MH3XWX0N14KZX9TJ13ggys
+RUNPOD_ENDPOINT_ID=your-endpoint-id-here
+RUNPOD_API_KEY=your-runpod-api-key-here
 PORT=8000
 ```
 

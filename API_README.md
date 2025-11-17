@@ -237,5 +237,3 @@ See `docs/API_GUIDE.md` for details.
 ---
 
 **Questions?** Check `docs/API_GUIDE.md` or `CLAUDE.md`
-
-API_key = "rpa_3O2QGMN26HIIKM3L345AXOB3MH3XWX0N14KZX9TJ13ggys"
