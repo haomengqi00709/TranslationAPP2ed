@@ -195,7 +195,20 @@ def process_translation(
 
                 elapsed = int(time.time() - start_time)
 
-                if status == "COMPLETED":
+                # Handle queue status
+                if status == "IN_QUEUE":
+                    jobs[job_id]["progress"] = 15
+                    jobs[job_id]["message"] = "⏳ Your task is in queue... Waiting for available GPU"
+                    jobs[job_id]["updated_at"] = datetime.now().isoformat()
+                    logger.info(f"[{job_id}] Job in RunPod queue ({elapsed}s elapsed)")
+                    time.sleep(5)
+                    continue
+
+                elif status == "IN_PROGRESS":
+                    # Job is running on GPU - use detailed progress milestones
+                    pass  # Will be handled below
+
+                elif status == "COMPLETED":
                     # Get output with retry
                     try:
                         result = run_request.output()
@@ -225,29 +238,30 @@ def process_translation(
                     error_msg = result.get("error", "Unknown error") if 'result' in locals() else "Job failed on RunPod"
                     raise Exception(f"RunPod job failed: {error_msg}")
 
-                # Update progress with meaningful milestones
-                if elapsed < 30:
-                    progress = 25
-                    message = "🚀 Starting translation engine..."
-                elif elapsed < 60:
-                    progress = 35
-                    message = "📄 Processing slides..."
-                elif elapsed < 120:
-                    progress = 50
-                    message = "✍️ Translating content..."
-                elif elapsed < 180:
-                    progress = 65
-                    message = "🎨 Applying formatting..."
-                elif elapsed < 240:
-                    progress = 80
-                    message = "🔍 Quality check..."
-                else:
-                    progress = min(90, 20 + int((elapsed / max_wait) * 70))
-                    message = f"⏳ Finalizing... ({elapsed}s elapsed)"
+                # If IN_PROGRESS, update with meaningful milestones
+                if status == "IN_PROGRESS":
+                    if elapsed < 30:
+                        progress = 25
+                        message = "🚀 Starting translation engine..."
+                    elif elapsed < 60:
+                        progress = 35
+                        message = "📄 Processing slides..."
+                    elif elapsed < 120:
+                        progress = 50
+                        message = "✍️ Translating content..."
+                    elif elapsed < 180:
+                        progress = 65
+                        message = "🎨 Applying formatting..."
+                    elif elapsed < 240:
+                        progress = 80
+                        message = "🔍 Quality check..."
+                    else:
+                        progress = min(90, 20 + int((elapsed / max_wait) * 70))
+                        message = f"⏳ Finalizing... ({elapsed}s elapsed)"
 
-                jobs[job_id]["progress"] = progress
-                jobs[job_id]["message"] = message
-                jobs[job_id]["updated_at"] = datetime.now().isoformat()
+                    jobs[job_id]["progress"] = progress
+                    jobs[job_id]["message"] = message
+                    jobs[job_id]["updated_at"] = datetime.now().isoformat()
 
                 time.sleep(5)  # Check every 5 seconds
 
