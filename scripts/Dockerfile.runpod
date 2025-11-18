@@ -55,15 +55,16 @@ RUN python3 -c "from transformers import AutoTokenizer, AutoModel; \
     AutoModel.from_pretrained(model_name)"
 
 # Pre-download local LLM models (8B and 14B)
-# This speeds up cold starts by bundling models in the image
-RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
-    print('Downloading Qwen3-8B...'); \
-    AutoTokenizer.from_pretrained('Qwen/Qwen3-8B'); \
-    AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-8B'); \
-    print('Downloading Qwen3-14B...'); \
-    AutoTokenizer.from_pretrained('Qwen/Qwen3-14B'); \
-    AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-14B'); \
-    print('All models downloaded!')"
+# NOTE: This is optional. Models will download at runtime if not pre-bundled.
+# Uncomment to pre-download (requires 32GB+ Docker memory allocation):
+# RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+#     print('Downloading Qwen3-8B...'); \
+#     AutoTokenizer.from_pretrained('Qwen/Qwen3-8B'); \
+#     AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-8B'); \
+#     print('Downloading Qwen3-14B...'); \
+#     AutoTokenizer.from_pretrained('Qwen/Qwen3-14B'); \
+#     AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-14B'); \
+#     print('All models downloaded!')"
 
 # Copy application code
 COPY . .
