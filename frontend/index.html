@@ -391,7 +391,16 @@
             </div>
             <div id="statusDetails"></div>
         </div>
+
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0; text-align: center; font-size: 11px; color: #999;">
+            <span id="versionInfo"></span>
+        </div>
     </div>
+
+    <script>
+        // Display version info
+        document.getElementById('versionInfo').textContent = `v1.0.1 • API: ${window.location.hostname === 'localhost' ? 'localhost:8000' : 'Railway'} • Build: 2025-11-17`;
+    </script>
 
     <script>
         let selectedFile = null;
@@ -400,9 +409,17 @@
         let customGlossary = [];
 
         // API Configuration - automatically detect local vs production
+        const APP_VERSION = 'v1.0.1';  // Update this when making changes
+        const BUILD_DATE = '2025-11-17';
+
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:8000'  // Local development
             : 'https://translationapp2ed-production.up.railway.app';  // Production Railway backend (updated)
+
+        // Log version info to console for debugging
+        console.log(`%c🚀 PowerPoint Translator ${APP_VERSION}`, 'font-size: 14px; font-weight: bold; color: #667eea');
+        console.log(`📡 API URL: ${API_URL}`);
+        console.log(`📅 Build Date: ${BUILD_DATE}`);
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
