@@ -54,12 +54,16 @@ RUN python3 -c "from transformers import AutoTokenizer, AutoModel; \
     AutoTokenizer.from_pretrained(model_name); \
     AutoModel.from_pretrained(model_name)"
 
-# Pre-download local LLM model (if using Qwen)
-# Uncomment if you want to bundle the LLM in the image
-# RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
-#     model_name='Qwen/Qwen2.5-7B-Instruct'; \
-#     AutoTokenizer.from_pretrained(model_name); \
-#     AutoModelForCausalLM.from_pretrained(model_name)"
+# Pre-download local LLM models (8B and 14B)
+# This speeds up cold starts by bundling models in the image
+RUN python3 -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+    print('Downloading Qwen3-8B...'); \
+    AutoTokenizer.from_pretrained('Qwen/Qwen3-8B'); \
+    AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-8B'); \
+    print('Downloading Qwen3-14B...'); \
+    AutoTokenizer.from_pretrained('Qwen/Qwen3-14B'); \
+    AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-14B'); \
+    print('All models downloaded!')"
 
 # Copy application code
 COPY . .
