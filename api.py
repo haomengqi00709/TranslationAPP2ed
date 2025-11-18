@@ -235,7 +235,15 @@ def process_translation(
                         raise Exception("No file_base64 in RunPod response")
 
                 elif status == "FAILED":
-                    error_msg = result.get("error", "Unknown error") if 'result' in locals() else "Job failed on RunPod"
+                    # Try to get detailed error from RunPod output
+                    try:
+                        result = run_request.output()
+                        error_msg = result.get("error", str(result)) if result else "Unknown error"
+                        logger.error(f"[{job_id}] RunPod job failed with result: {result}")
+                    except Exception as e:
+                        error_msg = f"Failed to get error details: {str(e)}"
+                        logger.error(f"[{job_id}] Could not retrieve RunPod error: {e}")
+
                     raise Exception(f"RunPod job failed: {error_msg}")
 
                 # If IN_PROGRESS, update with meaningful milestones
