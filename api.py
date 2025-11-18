@@ -218,10 +218,28 @@ def process_translation(
                     error_msg = result.get("error", "Unknown error") if 'result' in locals() else "Job failed on RunPod"
                     raise Exception(f"RunPod job failed: {error_msg}")
 
-                # Update progress
-                progress = min(90, 20 + int((elapsed / max_wait) * 70))
+                # Update progress with meaningful milestones
+                if elapsed < 30:
+                    progress = 25
+                    message = "🚀 Starting translation engine..."
+                elif elapsed < 60:
+                    progress = 35
+                    message = "📄 Processing slides..."
+                elif elapsed < 120:
+                    progress = 50
+                    message = "✍️ Translating content..."
+                elif elapsed < 180:
+                    progress = 65
+                    message = "🎨 Applying formatting..."
+                elif elapsed < 240:
+                    progress = 80
+                    message = "🔍 Quality check..."
+                else:
+                    progress = min(90, 20 + int((elapsed / max_wait) * 70))
+                    message = f"⏳ Finalizing... ({elapsed}s elapsed)"
+
                 jobs[job_id]["progress"] = progress
-                jobs[job_id]["message"] = f"Translating on RunPod... ({elapsed}s elapsed)"
+                jobs[job_id]["message"] = message
                 jobs[job_id]["updated_at"] = datetime.now().isoformat()
 
                 time.sleep(5)  # Check every 5 seconds
