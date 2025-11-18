@@ -39,6 +39,7 @@ GEMINI_MAX_TOKENS = 500
 # ============================================================================
 
 LOCAL_MODEL_NAME = "Qwen/Qwen3-8B"
+LOCAL_MODEL_14B_NAME = "Qwen/Qwen3-14B"  # Better model, larger and more accurate
 LOCAL_DEVICE = "mps"  # "auto", "cuda", "mps", "cpu"
 LOCAL_TEMPERATURE = 0.8
 LOCAL_MAX_TOKENS = 200
