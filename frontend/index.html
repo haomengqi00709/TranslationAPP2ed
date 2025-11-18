@@ -384,6 +384,10 @@
             Select a file to translate
         </button>
 
+        <button id="cancelBtn" onclick="cancelTranslation()" style="display: none; background: #dc3545; margin-top: 10px;">
+            ✕ Cancel Translation
+        </button>
+
         <div class="status" id="status">
             <div id="statusMessage"></div>
             <div class="progress-bar">
@@ -579,6 +583,10 @@
                 currentJobId = data.job_id;
 
                 showStatus('pending', 'Translation job created', 'Waiting to start...');
+
+                // Show cancel button
+                document.getElementById('cancelBtn').style.display = 'block';
+
                 startStatusChecking();
 
             } catch (error) {
@@ -604,11 +612,19 @@
 
                 if (data.status === 'completed') {
                     clearInterval(statusCheckInterval);
+                    document.getElementById('cancelBtn').style.display = 'none';
                     showStatus('completed', 'Translation complete!', '');
                     showDownloadButton(currentJobId);
                 } else if (data.status === 'failed') {
                     clearInterval(statusCheckInterval);
+                    document.getElementById('cancelBtn').style.display = 'none';
                     showStatus('failed', 'Translation failed', data.error || 'Unknown error');
+                    translateBtn.disabled = false;
+                    translateBtn.textContent = 'Try Again';
+                } else if (data.status === 'cancelled') {
+                    clearInterval(statusCheckInterval);
+                    document.getElementById('cancelBtn').style.display = 'none';
+                    showStatus('failed', 'Translation cancelled', data.message);
                     translateBtn.disabled = false;
                     translateBtn.textContent = 'Try Again';
                 } else if (data.status === 'processing') {
@@ -619,6 +635,31 @@
 
             } catch (error) {
                 console.error('Status check failed:', error);
+            }
+        }
+
+        async function cancelTranslation() {
+            if (!currentJobId) return;
+
+            if (!confirm('Are you sure you want to cancel this translation?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/cancel/${currentJobId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus('failed', 'Cancelling...', data.message);
+                    // Status polling will detect the cancelled status
+                } else {
+                    alert('Failed to cancel translation');
+                }
+            } catch (error) {
+                console.error('Cancel failed:', error);
+                alert('Failed to cancel translation');
             }
         }
 

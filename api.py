@@ -177,6 +177,13 @@ def process_translation(
             start_time = time.time()
 
             while time.time() - start_time < max_wait:
+                # Check if job was cancelled
+                if jobs[job_id].get("status") == "cancelled":
+                    logger.info(f"[{job_id}] Job cancelled by user")
+                    jobs[job_id]["message"] = "Translation cancelled by user"
+                    jobs[job_id]["updated_at"] = datetime.now().isoformat()
+                    return
+
                 # Try to get status with retry logic
                 try:
                     status = run_request.status()
@@ -428,6 +435,28 @@ async def get_status(job_id: str):
         download_url=job.get("download_url"),
         error=job.get("error")
     )
+
+
+@app.post("/api/cancel/{job_id}")
+async def cancel_job(job_id: str):
+    """
+    Cancel a running translation job.
+    """
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = jobs[job_id]
+
+    # Only cancel if job is still processing
+    if job["status"] in ["pending", "processing"]:
+        jobs[job_id]["status"] = "cancelled"
+        jobs[job_id]["progress"] = 0
+        jobs[job_id]["message"] = "Translation cancelled by user"
+        jobs[job_id]["updated_at"] = datetime.now().isoformat()
+        logger.info(f"Job {job_id} cancelled by user")
+        return {"status": "cancelled", "message": "Job cancelled successfully"}
+    else:
+        return {"status": job["status"], "message": f"Job already {job['status']}"}
 
 
 @app.get("/api/download/{job_id}")
