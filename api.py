@@ -223,13 +223,17 @@ def process_translation(
                         with open(output_path, "wb") as f:
                             f.write(output_bytes)
 
+                        # Store translation pairs if available
+                        translation_pairs = result.get("stats", {}).get("translation_pairs", [])
+
                         jobs[job_id]["status"] = "completed"
                         jobs[job_id]["progress"] = 100
                         jobs[job_id]["message"] = f"Translation completed in {elapsed}s"
                         jobs[job_id]["download_url"] = f"/api/download/{job_id}"
+                        jobs[job_id]["translation_pairs"] = translation_pairs
                         jobs[job_id]["updated_at"] = datetime.now().isoformat()
 
-                        logger.info(f"[{job_id}] RunPod translation completed: {output_path}")
+                        logger.info(f"[{job_id}] RunPod translation completed: {output_path}, {len(translation_pairs)} translation pairs")
                         return
                     else:
                         raise Exception("No file_base64 in RunPod response")

@@ -327,6 +327,89 @@
             padding: 2px 8px;
             border-radius: 10px;
         }
+
+        .translation-pairs {
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .translation-pairs h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .translation-pair {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .translation-source {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .translation-target {
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .translation-slide-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .translation-pairs-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .contact-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        .contact-info a:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -406,6 +489,19 @@
                 <div class="progress-fill" id="progressFill"></div>
             </div>
             <div id="statusDetails"></div>
+        </div>
+
+        <!-- Translation Pairs Display -->
+        <div class="translation-pairs" id="translationPairs">
+            <h3>📋 Translation Preview</h3>
+            <div class="translation-pairs-list" id="translationPairsList"></div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="contact-info">
+            <h3>💬 Need Help or Advice?</h3>
+            <p>Contact <strong>Jason Hao</strong> for technical support or custom translation solutions</p>
+            <p>📧 Email: <a href="mailto:haomengqi12138@gmail.com">haomengqi12138@gmail.com</a></p>
         </div>
 
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0; text-align: center; font-size: 11px; color: #999;">
@@ -627,6 +723,7 @@
                     document.getElementById('cancelBtn').style.display = 'none';
                     showStatus('completed', 'Translation complete!', '');
                     showDownloadButton(currentJobId);
+                    showTranslationPairs(data.translation_pairs || []);
                 } else if (data.status === 'failed') {
                     clearInterval(statusCheckInterval);
                     document.getElementById('cancelBtn').style.display = 'none';
@@ -694,6 +791,42 @@
             };
             statusDetails.innerHTML = '';
             statusDetails.appendChild(downloadBtn);
+        }
+
+        function showTranslationPairs(pairs) {
+            const container = document.getElementById('translationPairs');
+            const list = document.getElementById('translationPairsList');
+
+            if (!pairs || pairs.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            list.innerHTML = '';
+            pairs.forEach((pair, index) => {
+                const pairDiv = document.createElement('div');
+                pairDiv.className = 'translation-pair';
+
+                const sourceDiv = document.createElement('div');
+                sourceDiv.className = 'translation-source';
+                sourceDiv.innerHTML = `<strong>Original:</strong> ${escapeHtml(pair.source)}`;
+
+                const targetDiv = document.createElement('div');
+                targetDiv.className = 'translation-target';
+                targetDiv.innerHTML = `<strong>Translation:</strong> ${escapeHtml(pair.target)} <span class="translation-slide-badge">Slide ${pair.slide + 1}</span>`;
+
+                pairDiv.appendChild(sourceDiv);
+                pairDiv.appendChild(targetDiv);
+                list.appendChild(pairDiv);
+            });
+
+            container.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Allow Enter key to add glossary entries

@@ -142,6 +142,26 @@ class TranslationPipeline:
             }
             logger.info(f"✓ Translated {trans_count} paragraphs in {step_time:.2f}s")
 
+            # Collect translation pairs for display
+            translation_pairs = []
+            try:
+                with open(translated_paragraphs, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            para = json.loads(line)
+                            if para.get("text") and para.get("translated_text"):
+                                translation_pairs.append({
+                                    "source": para["text"],
+                                    "target": para["translated_text"],
+                                    "slide": para.get("slide_index", 0)
+                                })
+                stats["translation_pairs"] = translation_pairs[:50]  # Limit to first 50 for UI performance
+                logger.info(f"Collected {len(translation_pairs)} translation pairs (showing {min(len(translation_pairs), 50)})")
+            except Exception as e:
+                logger.warning(f"Could not collect translation pairs: {e}")
+                stats["translation_pairs"] = []
+
             # Step 3: Apply BERT alignment to paragraphs
             logger.info("\n[Step 3/9] Applying BERT alignment to paragraphs")
             step_start = time.time()
