@@ -177,11 +177,25 @@ def process_translation(
             start_time = time.time()
 
             while time.time() - start_time < max_wait:
-                status = run_request.status()
+                # Try to get status with retry logic
+                try:
+                    status = run_request.status()
+                except Exception as status_error:
+                    logger.warning(f"[{job_id}] Error checking RunPod status (will retry): {status_error}")
+                    jobs[job_id]["message"] = "Connecting to RunPod (retrying)..."
+                    time.sleep(5)
+                    continue
+
                 elapsed = int(time.time() - start_time)
 
                 if status == "COMPLETED":
-                    result = run_request.output()
+                    # Get output with retry
+                    try:
+                        result = run_request.output()
+                    except Exception as output_error:
+                        logger.warning(f"[{job_id}] Error getting RunPod output (will retry): {output_error}")
+                        time.sleep(5)
+                        continue
 
                     # Decode and save result
                     if "file_base64" in result:
