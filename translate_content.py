@@ -30,7 +30,7 @@ class ContentTranslator:
         Initialize content translator.
 
         Args:
-            translator_type: Type of translator ("local", "openai", "anthropic")
+            translator_type: Type of translator ("local", "local-14b", "openai", "anthropic")
                            If None, uses config.TRANSLATOR_TYPE
             glossary: Optional terminology glossary for consistent translations
         """
@@ -39,9 +39,20 @@ class ContentTranslator:
 
         logger.info(f"Initializing {translator_type} content translator")
 
-        if translator_type == "local":
+        if translator_type == "local" or translator_type == "local-14b":
+            if LocalLLMTranslator is None:
+                raise RuntimeError(
+                    "Local LLM translator not available (torch not installed). "
+                    "Use translator_type='openai' or 'anthropic' instead, "
+                    "or install full dependencies with: pip install -r requirements-full.txt"
+                )
+
+            # Select model based on translator type
+            model_name = config.LOCAL_MODEL_14B_NAME if translator_type == "local-14b" else config.LOCAL_MODEL_NAME
+            logger.info(f"Using model: {model_name}")
+
             self.translator = LocalLLMTranslator(
-                model_name=config.LOCAL_MODEL_NAME,
+                model_name=model_name,
                 source_lang=config.SOURCE_LANGUAGE,
                 target_lang=config.TARGET_LANGUAGE,
                 device=config.LOCAL_DEVICE,
