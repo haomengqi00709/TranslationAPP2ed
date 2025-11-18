@@ -345,12 +345,24 @@
 
         <div class="options">
             <div class="option-group">
-                <label for="translator">Translation Engine</label>
+                <label for="translator">Translation Model</label>
                 <select id="translator">
-                    <option value="local">Local LLM (Free, GPU required)</option>
-                    <option value="openai">OpenAI GPT (Paid, Fast)</option>
-                    <option value="anthropic">Anthropic Claude (Paid, High Quality)</option>
+                    <optgroup label="Free Models (GPU-Powered)">
+                        <option value="local" selected>🌟 Basic Model (Qwen 8B)</option>
+                        <option value="local-14b" disabled style="color: #999;">⭐ Better Model (Qwen 14B) - Coming Soon</option>
+                    </optgroup>
+                    <optgroup label="Premium Models (Coming Soon)">
+                        <option value="advanced" disabled style="color: #999;">🚀 Advanced Model - Coming Soon</option>
+                        <option value="premium" disabled style="color: #999;">💎 Premium Model - Coming Soon</option>
+                    </optgroup>
+                    <optgroup label="API-Based (Paid, Requires API Key)">
+                        <option value="openai">OpenAI GPT-4</option>
+                        <option value="anthropic">Anthropic Claude</option>
+                    </optgroup>
                 </select>
+                <p style="font-size: 11px; color: #666; margin-top: 5px;">
+                    💡 Basic Model is free and runs on GPU. Premium models coming soon!
+                </p>
             </div>
 
             <!-- Glossary Section -->
