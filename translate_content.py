@@ -24,7 +24,8 @@ class ContentTranslator:
     def __init__(
         self,
         translator_type: Optional[str] = None,
-        glossary: Optional['TerminologyGlossary'] = None
+        glossary: Optional['TerminologyGlossary'] = None,
+        shared_translator = None
     ):
         """
         Initialize content translator.
@@ -33,10 +34,17 @@ class ContentTranslator:
             translator_type: Type of translator ("local", "local-14b", "openai", "anthropic")
                            If None, uses config.TRANSLATOR_TYPE
             glossary: Optional terminology glossary for consistent translations
+            shared_translator: Optional pre-initialized translator to reuse (saves GPU memory)
         """
-        translator_type = translator_type or config.TRANSLATOR_TYPE
         self.glossary = glossary
 
+        # If a shared translator is provided, use it instead of creating a new one
+        if shared_translator is not None:
+            logger.info(f"Reusing shared translator instance (saves GPU memory)")
+            self.translator = shared_translator
+            return
+
+        translator_type = translator_type or config.TRANSLATOR_TYPE
         logger.info(f"Initializing {translator_type} content translator")
 
         if translator_type == "local" or translator_type == "local-14b":

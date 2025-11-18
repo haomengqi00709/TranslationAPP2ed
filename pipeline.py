@@ -55,9 +55,13 @@ class TranslationPipeline:
         )
         self.aligner = AlignmentApplicator(glossary=self.glossary)
         self.context_builder = SlideContextBuilder()
+
+        # Reuse the same translator instance to save GPU memory
+        # ParagraphTranslator and ContentTranslator can share the model
         self.content_translator = ContentTranslator(
             translator_type=self.translator_type,
-            glossary=self.glossary
+            glossary=self.glossary,
+            shared_translator=self.translator.translator  # Share the underlying translator
         )
         self.table_aligner = TableAlignmentApplicator(glossary=self.glossary)
         self.updater = PowerPointUpdater()
