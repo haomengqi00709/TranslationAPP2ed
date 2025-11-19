@@ -81,6 +81,60 @@
             margin-bottom: 15px;
         }
 
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .language-group {
+            flex: 1;
+        }
+
+        .language-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .language-group select {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .swap-btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-bottom: 0;
+        }
+
+        .swap-btn:hover {
+            background: #5568d3;
+        }
+
+        .swap-btn:active {
+            transform: scale(0.95);
+        }
+
         label {
             display: block;
             margin-bottom: 5px;
@@ -511,6 +565,29 @@
         <div class="file-info" id="fileInfo" style="display: none;"></div>
 
         <div class="options">
+            <!-- Language Selection -->
+            <div class="language-selector">
+                <div class="language-group">
+                    <label for="sourceLang">Source Language</label>
+                    <select id="sourceLang" onchange="updateGlossaryLabels()">
+                        <option value="English" selected>🇬🇧 English</option>
+                        <option value="French">🇫🇷 French</option>
+                    </select>
+                </div>
+
+                <button class="swap-btn" onclick="swapLanguages()" title="Swap languages">
+                    ⇄
+                </button>
+
+                <div class="language-group">
+                    <label for="targetLang">Target Language</label>
+                    <select id="targetLang" onchange="updateGlossaryLabels()">
+                        <option value="French" selected>🇫🇷 French</option>
+                        <option value="English">🇬🇧 English</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="option-group">
                 <label for="translator">Translation Model</label>
                 <select id="translator">
@@ -551,8 +628,8 @@
                         Add your own translation pairs to ensure terminology consistency:
                     </p>
                     <div class="glossary-input-row">
-                        <input type="text" class="glossary-input" id="sourceInput" placeholder="English term (e.g., Senate)">
-                        <input type="text" class="glossary-input" id="targetInput" placeholder="French term (e.g., Sénat)">
+                        <input type="text" class="glossary-input" id="sourceInput" placeholder="">
+                        <input type="text" class="glossary-input" id="targetInput" placeholder="">
                         <button class="glossary-add-btn" onclick="addGlossaryEntry()">+ Add</button>
                     </div>
                     <div class="glossary-list" id="glossaryList">
@@ -631,6 +708,45 @@
         const translateBtn = document.getElementById('translateBtn');
         const statusDiv = document.getElementById('status');
         const statusMessage = document.getElementById('statusMessage');
+
+        // Language-related functions
+        function updateGlossaryLabels() {
+            const sourceLang = document.getElementById('sourceLang').value;
+            const targetLang = document.getElementById('targetLang').value;
+
+            // Update input placeholders
+            const sourceInput = document.getElementById('sourceInput');
+            const targetInput = document.getElementById('targetInput');
+
+            if (sourceLang === 'English' && targetLang === 'French') {
+                sourceInput.placeholder = 'English term (e.g., Senate)';
+                targetInput.placeholder = 'French term (e.g., Sénat)';
+            } else if (sourceLang === 'French' && targetLang === 'English') {
+                sourceInput.placeholder = 'French term (e.g., Sénat)';
+                targetInput.placeholder = 'English term (e.g., Senate)';
+            } else {
+                sourceInput.placeholder = `${sourceLang} term`;
+                targetInput.placeholder = `${targetLang} term`;
+            }
+        }
+
+        function swapLanguages() {
+            const sourceLang = document.getElementById('sourceLang');
+            const targetLang = document.getElementById('targetLang');
+
+            // Swap values
+            const temp = sourceLang.value;
+            sourceLang.value = targetLang.value;
+            targetLang.value = temp;
+
+            // Update labels
+            updateGlossaryLabels();
+        }
+
+        // Initialize glossary labels on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateGlossaryLabels();
+        });
         const statusDetails = document.getElementById('statusDetails');
         const progressFill = document.getElementById('progressFill');
 
@@ -823,6 +939,8 @@
 
             const translator = document.getElementById('translator').value;
             const useGlossary = document.getElementById('useGlossary').checked;
+            const sourceLang = document.getElementById('sourceLang').value;
+            const targetLang = document.getElementById('targetLang').value;
 
             // Build context with custom glossary
             let context = '';
@@ -837,7 +955,7 @@
             translateBtn.textContent = 'Uploading...';
 
             try {
-                const response = await fetch(`${API_URL}/api/translate?translator_type=${translator}&use_glossary=${useGlossary}&context=${encodeURIComponent(context)}`, {
+                const response = await fetch(`${API_URL}/api/translate?translator_type=${translator}&use_glossary=${useGlossary}&source_lang=${encodeURIComponent(sourceLang)}&target_lang=${encodeURIComponent(targetLang)}&context=${encodeURIComponent(context)}`, {
                     method: 'POST',
                     body: formData
                 });

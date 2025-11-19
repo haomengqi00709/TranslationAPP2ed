@@ -5,6 +5,7 @@ Orchestrates: Extraction → Translation → BERT Alignment → PPTX Update
 
 import logging
 import time
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -70,6 +71,8 @@ class TranslationPipeline:
         self,
         input_pptx: str,
         output_pptx: str,
+        source_lang: str = None,
+        target_lang: str = None,
         context: Optional[str] = None,
         keep_intermediate: bool = True
     ) -> dict:
@@ -79,12 +82,25 @@ class TranslationPipeline:
         Args:
             input_pptx: Path to input PowerPoint file
             output_pptx: Path to output PowerPoint file
+            source_lang: Source language (defaults to config.SOURCE_LANGUAGE)
+            target_lang: Target language (defaults to config.TARGET_LANGUAGE)
             context: Optional context for translation (e.g., glossary terms)
             keep_intermediate: Whether to keep intermediate JSONL files
 
         Returns:
             Dictionary with pipeline statistics
         """
+        # Use provided languages or fall back to config defaults
+        if source_lang is None:
+            source_lang = config.SOURCE_LANGUAGE
+        if target_lang is None:
+            target_lang = config.TARGET_LANGUAGE
+
+        # Temporarily override config for this run
+        original_source = config.SOURCE_LANGUAGE
+        original_target = config.TARGET_LANGUAGE
+        config.SOURCE_LANGUAGE = source_lang
+        config.TARGET_LANGUAGE = target_lang
         start_time = time.time()
         logger.info("=" * 80)
         logger.info("Starting Translation Pipeline")
@@ -326,6 +342,10 @@ class TranslationPipeline:
             import traceback
             logger.error(traceback.format_exc())
             raise
+        finally:
+            # Restore original config values
+            config.SOURCE_LANGUAGE = original_source
+            config.TARGET_LANGUAGE = original_target
 
 
 def main():

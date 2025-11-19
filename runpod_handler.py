@@ -61,6 +61,8 @@ def handler(job):
             "file_name": "presentation.pptx",
             "translator_type": "local",  # or "openai", "anthropic"
             "use_glossary": true,
+            "source_lang": "English",  # Source language (default: "English")
+            "target_lang": "French",   # Target language (default: "French")
             "context": "Optional custom terminology instructions"
         }
     }
@@ -83,6 +85,8 @@ def handler(job):
         file_name = job_input.get("file_name", "input.pptx")
         translator_type = job_input.get("translator_type", "local")
         use_glossary = job_input.get("use_glossary", True)
+        source_lang = job_input.get("source_lang", "English")
+        target_lang = job_input.get("target_lang", "French")
         context = job_input.get("context")
 
         if not file_base64:
@@ -114,10 +118,12 @@ def handler(job):
             )
 
             # Run translation
-            logger.info("Starting translation pipeline...")
+            logger.info(f"Starting translation pipeline: {source_lang} → {target_lang}...")
             stats = pipeline.run(
                 input_pptx=str(input_path),
                 output_pptx=str(output_path),
+                source_lang=source_lang,
+                target_lang=target_lang,
                 context=context,
                 keep_intermediate=False  # Save space
             )

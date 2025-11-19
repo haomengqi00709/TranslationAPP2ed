@@ -154,6 +154,8 @@ def process_translation(
     output_path: Path,
     translator_type: str,
     use_glossary: bool,
+    source_lang: str,
+    target_lang: str,
     context: Optional[str]
 ):
     """Background task to process translation."""
@@ -182,7 +184,9 @@ def process_translation(
                 "file_base64": file_base64,
                 "file_name": input_path.name,
                 "translator_type": translator_type,
-                "use_glossary": use_glossary
+                "use_glossary": use_glossary,
+                "source_lang": source_lang,
+                "target_lang": target_lang
             }
             if context:
                 job_input["context"] = context
@@ -329,6 +333,8 @@ def process_translation(
             pipeline.run(
                 input_pptx=str(input_path),
                 output_pptx=str(output_path),
+                source_lang=source_lang,
+                target_lang=target_lang,
                 context=context
             )
 
@@ -394,6 +400,8 @@ async def translate(
     file: UploadFile = File(...),
     translator_type: str = "local",
     use_glossary: bool = True,
+    source_lang: str = "English",
+    target_lang: str = "French",
     context: Optional[str] = None
 ):
     """
@@ -403,6 +411,8 @@ async def translate(
     - file: PowerPoint file (.pptx)
     - translator_type: "local", "openai", or "anthropic"
     - use_glossary: Whether to use terminology glossary
+    - source_lang: Source language (default: "English")
+    - target_lang: Target language (default: "French")
     - context: Optional context/instructions for translation
 
     Returns:
@@ -437,6 +447,8 @@ async def translate(
         "filename": file.filename,
         "translator_type": translator_type,
         "use_glossary": use_glossary,
+        "source_lang": source_lang,
+        "target_lang": target_lang,
         "input_path": str(input_path),
         "output_path": str(output_path),
         "download_url": None,
@@ -452,6 +464,8 @@ async def translate(
         output_path=output_path,
         translator_type=translator_type,
         use_glossary=use_glossary,
+        source_lang=source_lang,
+        target_lang=target_lang,
         context=context
     )
 
