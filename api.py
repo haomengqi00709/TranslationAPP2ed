@@ -199,7 +199,7 @@ def process_translation(
 
             # Poll for completion
             import time
-            max_wait = 600  # 10 minutes
+            max_wait = 1200  # 20 minutes
             start_time = time.time()
 
             while time.time() - start_time < max_wait:
