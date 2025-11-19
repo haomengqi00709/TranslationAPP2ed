@@ -514,22 +514,17 @@
             <div class="option-group">
                 <label for="translator">Translation Model</label>
                 <select id="translator">
-                    <optgroup label="Free Models (GPU-Powered)">
-                        <option value="local" selected>🌟 Basic Model (8B)</option>
-                        <option value="local-14b">⭐ Better Model (14B)</option>
-                    </optgroup>
-                    <optgroup label="Premium Models (Coming Soon)">
-                        <option value="advanced" disabled style="color: #999;">🚀 Advanced Model - Coming Soon</option>
-                        <option value="premium" disabled style="color: #999;">💎 Premium Model - Coming Soon</option>
-                    </optgroup>
-                    <optgroup label="API-Based (Paid, Requires API Key)">
-                        <option value="openai">OpenAI GPT-4</option>
-                        <option value="anthropic">Anthropic Claude</option>
-                    </optgroup>
+                    <option value="local" selected>🌟 Basic Model (8B)</option>
+                    <option value="local-14b">⭐ Better Model (14B)</option>
                 </select>
-                <p style="font-size: 11px; color: #666; margin-top: 5px;">
-                    💡 Free models run on GPU. 14B model is larger and more accurate but slower.
-                </p>
+                <div style="margin-top: 8px; padding: 10px; background: #f0f9ff; border-left: 3px solid #0ea5e9; border-radius: 4px;">
+                    <p style="font-size: 12px; color: #0369a1; margin: 0; font-weight: 500;">
+                        🔒 100% Data Security - All models run locally
+                    </p>
+                    <p style="font-size: 11px; color: #075985; margin: 5px 0 0 0;">
+                        Your data is never shared with third parties. 14B model is larger and more accurate but slower.
+                    </p>
+                </div>
             </div>
 
             <!-- Glossary Section -->
