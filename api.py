@@ -61,9 +61,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Job storage (in production, use Redis or database)
-# For now, simple in-memory dict
-jobs = {}
+# Job storage with persistence
+JOBS_FILE = Path("jobs.json")
+
+def load_jobs():
+    """Load jobs from disk."""
+    if JOBS_FILE.exists():
+        try:
+            with open(JOBS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load jobs from disk: {e}")
+            return {}
+    return {}
+
+def save_jobs():
+    """Save jobs to disk."""
+    try:
+        with open(JOBS_FILE, 'w') as f:
+            json.dump(jobs, f)
+    except Exception as e:
+        logger.error(f"Failed to save jobs to disk: {e}")
+
+# Load existing jobs from disk on startup
+jobs = load_jobs()
+logger.info(f"Loaded {len(jobs)} jobs from disk")
 
 # Directories
 UPLOAD_DIR = Path("uploads")
@@ -232,6 +254,7 @@ def process_translation(
                         jobs[job_id]["download_url"] = f"/api/download/{job_id}"
                         jobs[job_id]["translation_pairs"] = translation_pairs
                         jobs[job_id]["updated_at"] = datetime.now().isoformat()
+                        save_jobs()  # Persist completion to disk
 
                         logger.info(f"[{job_id}] RunPod translation completed: {output_path}, {len(translation_pairs)} translation pairs")
                         return
@@ -315,6 +338,7 @@ def process_translation(
             jobs[job_id]["message"] = "Translation completed successfully"
             jobs[job_id]["download_url"] = f"/api/download/{job_id}"
             jobs[job_id]["updated_at"] = datetime.now().isoformat()
+            save_jobs()  # Persist completion to disk
 
             logger.info(f"[{job_id}] Local translation completed: {output_path}")
 
@@ -326,6 +350,7 @@ def process_translation(
         jobs[job_id]["message"] = "Translation failed"
         jobs[job_id]["error"] = str(e)
         jobs[job_id]["updated_at"] = datetime.now().isoformat()
+        save_jobs()  # Persist failure to disk
 
 
 # ==============================================================================
@@ -417,6 +442,7 @@ async def translate(
         "download_url": None,
         "error": None
     }
+    save_jobs()  # Persist job to disk
 
     # Start background processing
     background_tasks.add_task(
@@ -479,6 +505,7 @@ async def cancel_job(job_id: str):
         jobs[job_id]["progress"] = 0
         jobs[job_id]["message"] = "Translation cancelled by user"
         jobs[job_id]["updated_at"] = datetime.now().isoformat()
+        save_jobs()  # Persist cancellation to disk
         logger.info(f"Job {job_id} cancelled by user")
         return {"status": "cancelled", "message": "Job cancelled successfully"}
     else:
