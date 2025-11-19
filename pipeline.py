@@ -17,6 +17,7 @@ from build_slide_context import SlideContextBuilder
 from translate_content import ContentTranslator
 from apply_table_alignment import TableAlignmentApplicator
 from update_pptx import PowerPointUpdater
+from build_presentation_summary import generate_presentation_summary
 
 # Set up logging
 logging.basicConfig(
@@ -118,7 +119,7 @@ class TranslationPipeline:
 
         try:
             # Step 1: Extract content (text, tables, charts)
-            logger.info("\n[Step 1/9] Extracting content from PowerPoint")
+            logger.info("\n[Step 1/10] Extracting content from PowerPoint")
             step_start = time.time()
 
             extracted_text = str(config.EXTRACTED_PARAGRAPHS_JSONL)
@@ -142,13 +143,41 @@ class TranslationPipeline:
             }
             logger.info(f"✓ Extracted {para_count} paragraphs, {counts.get('tables', 0)} tables, {counts.get('chart_titles', 0)} charts in {step_time:.2f}s")
 
-            # Step 2: Translate paragraphs
-            logger.info("\n[Step 2/9] Translating paragraphs")
+            # Step 2: Generate presentation summary
+            logger.info("\n[Step 2/10] Generating presentation summary")
+            step_start = time.time()
+
+            presentation_summary = generate_presentation_summary(
+                extracted_text,
+                extracted_tables,
+                extracted_charts,
+                self.translator.translator,  # Reuse existing translator
+                max_slides=3
+            )
+
+            step_time = time.time() - step_start
+            stats["steps"]["generate_summary"] = {
+                "summary": presentation_summary,
+                "time_seconds": round(step_time, 2)
+            }
+            if presentation_summary:
+                logger.info(f"✓ Generated summary: {presentation_summary}")
+                logger.info(f"  (took {step_time:.2f}s)")
+            else:
+                logger.info(f"⏭️  No summary generated (took {step_time:.2f}s)")
+
+            # Step 3: Translate paragraphs
+            logger.info("\n[Step 3/10] Translating paragraphs")
             step_start = time.time()
 
             translated_paragraphs = str(config.TRANSLATED_PARAGRAPHS_JSONL)
+            # Prepend presentation summary to context
+            full_context = context or ""
+            if presentation_summary:
+                full_context = f"Presentation Context: {presentation_summary}\n\n" + full_context
+
             trans_count = self.translator.translate_paragraphs(
-                extracted_text, translated_paragraphs, context=context
+                extracted_text, translated_paragraphs, context=full_context
             )
 
             step_time = time.time() - step_start
@@ -178,8 +207,8 @@ class TranslationPipeline:
                 logger.warning(f"Could not collect translation pairs: {e}")
                 stats["translation_pairs"] = []
 
-            # Step 3: Apply BERT alignment to paragraphs
-            logger.info("\n[Step 3/9] Applying BERT alignment to paragraphs")
+            # Step 4: Apply BERT alignment to paragraphs
+            logger.info("\n[Step 4/10] Applying BERT alignment to paragraphs")
             step_start = time.time()
 
             aligned_paragraphs = str(config.ALIGNED_RUNS_JSONL)
@@ -192,8 +221,8 @@ class TranslationPipeline:
             }
             logger.info(f"✓ Aligned {align_count} paragraphs in {step_time:.2f}s")
 
-            # Step 4: Build slide context
-            logger.info("\n[Step 4/9] Building slide context")
+            # Step 5: Build slide context
+            logger.info("\n[Step 5/10] Building slide context")
             step_start = time.time()
 
             slide_context = str(config.TEMP_DIR / "slide_context.jsonl")
@@ -206,8 +235,8 @@ class TranslationPipeline:
             }
             logger.info(f"✓ Built context for {context_count} slides in {step_time:.2f}s")
 
-            # Step 5: Translate charts
-            logger.info("\n[Step 5/9] Translating charts")
+            # Step 6: Translate charts
+            logger.info("\n[Step 6/10] Translating charts")
             step_start = time.time()
 
             translated_charts = str(config.TEMP_DIR / "translated_charts.jsonl")
@@ -226,8 +255,8 @@ class TranslationPipeline:
                 "time_seconds": round(step_time, 2)
             }
 
-            # Step 6: Translate tables
-            logger.info("\n[Step 6/9] Translating tables")
+            # Step 7: Translate tables
+            logger.info("\n[Step 7/10] Translating tables")
             step_start = time.time()
 
             translated_tables = str(config.TEMP_DIR / "translated_tables.jsonl")
@@ -246,8 +275,8 @@ class TranslationPipeline:
                 "time_seconds": round(step_time, 2)
             }
 
-            # Step 7: Apply BERT alignment to tables
-            logger.info("\n[Step 7/9] Applying BERT alignment to tables")
+            # Step 8: Apply BERT alignment to tables
+            logger.info("\n[Step 8/10] Applying BERT alignment to tables")
             step_start = time.time()
 
             aligned_tables = str(config.TEMP_DIR / "aligned_tables.jsonl")
@@ -266,8 +295,8 @@ class TranslationPipeline:
                 "time_seconds": round(step_time, 2)
             }
 
-            # Step 8: Merge all translated content
-            logger.info("\n[Step 8/9] Merging all translated content")
+            # Step 9: Merge all translated content
+            logger.info("\n[Step 9/10] Merging all translated content")
             step_start = time.time()
 
             merged_content = str(config.TEMP_DIR / "merged_content.jsonl")
@@ -296,8 +325,8 @@ class TranslationPipeline:
             }
             logger.info(f"✓ Merged content in {step_time:.2f}s")
 
-            # Step 9: Update PowerPoint
-            logger.info("\n[Step 9/9] Updating PowerPoint presentation")
+            # Step 10: Update PowerPoint
+            logger.info("\n[Step 10/10] Updating PowerPoint presentation")
             step_start = time.time()
 
             update_counts = self.updater.update_presentation(
