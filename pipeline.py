@@ -102,11 +102,20 @@ class TranslationPipeline:
         original_target = config.TARGET_LANGUAGE
         config.SOURCE_LANGUAGE = source_lang
         config.TARGET_LANGUAGE = target_lang
+
+        # CRITICAL: Update translator's language attributes
+        # The translator was initialized with default config values in __init__
+        # We must update it here after config override
+        self.translator.translator.source_lang = source_lang
+        self.translator.translator.target_lang = target_lang
+        logger.info(f"Updated translator: {source_lang} → {target_lang}")
+
         start_time = time.time()
         logger.info("=" * 80)
         logger.info("Starting Translation Pipeline")
         logger.info(f"Input: {input_pptx}")
         logger.info(f"Output: {output_pptx}")
+        logger.info(f"Languages: {source_lang} → {target_lang}")
         logger.info(f"Translator: {self.translator_type}")
         logger.info("=" * 80)
 
