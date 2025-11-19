@@ -410,6 +410,78 @@
         .contact-info a:hover {
             opacity: 0.8;
         }
+
+        .glossary-help {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 16px;
+            margin-left: 8px;
+            cursor: help;
+            position: relative;
+        }
+
+        .glossary-help:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: normal;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .glossary-help:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+            margin-bottom: 2px;
+        }
+
+        .glossary-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .glossary-action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .glossary-action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .glossary-action-btn:active {
+            background: #f5f5f5;
+        }
     </style>
 </head>
 <body>
@@ -451,10 +523,19 @@
             <!-- Glossary Section -->
             <div class="glossary-section">
                 <div class="glossary-header" onclick="toggleGlossary()">
-                    <h3>📖 Custom Glossary <span class="glossary-count" id="glossaryCount">0 terms</span></h3>
+                    <h3>
+                        📖 Custom Glossary
+                        <span class="glossary-help" data-tooltip="Put in your special translation needs, for example your team name" onclick="event.stopPropagation()">?</span>
+                        <span class="glossary-count" id="glossaryCount">0 terms</span>
+                    </h3>
                     <span class="glossary-toggle" id="glossaryToggle">▼ Show</span>
                 </div>
                 <div class="glossary-content" id="glossaryContent">
+                    <div class="glossary-actions">
+                        <button class="glossary-action-btn" onclick="downloadGlossary()">📥 Download</button>
+                        <button class="glossary-action-btn" onclick="document.getElementById('glossaryUpload').click()">📤 Upload</button>
+                        <input type="file" id="glossaryUpload" accept=".json" style="display: none;" onchange="uploadGlossary(event)">
+                    </div>
                     <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
                         Add your own translation pairs to ensure terminology consistency:
                     </p>
@@ -654,6 +735,73 @@
             const count = document.getElementById('glossaryCount');
             const total = customGlossary.length;
             count.textContent = `${total} term${total !== 1 ? 's' : ''}`;
+        }
+
+        function downloadGlossary() {
+            if (customGlossary.length === 0) {
+                alert('No glossary entries to download. Add some terms first!');
+                return;
+            }
+
+            const dataStr = JSON.stringify(customGlossary, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'translation-glossary.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            console.log('Downloaded glossary with', customGlossary.length, 'entries');
+        }
+
+        function uploadGlossary(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // Validate format
+                    if (!Array.isArray(data)) {
+                        throw new Error('Invalid format: glossary must be an array');
+                    }
+
+                    // Validate each entry
+                    for (const entry of data) {
+                        if (!entry.source || !entry.target) {
+                            throw new Error('Invalid format: each entry must have "source" and "target"');
+                        }
+                    }
+
+                    // Ask for confirmation if there are existing entries
+                    if (customGlossary.length > 0) {
+                        if (!confirm(`You have ${customGlossary.length} existing entries. Replace with ${data.length} entries from file?`)) {
+                            event.target.value = ''; // Reset file input
+                            return;
+                        }
+                    }
+
+                    customGlossary = data;
+                    renderGlossaryList();
+                    updateGlossaryCount();
+
+                    alert(`Successfully loaded ${data.length} glossary entries!`);
+                    console.log('Uploaded glossary with', data.length, 'entries');
+                } catch (error) {
+                    alert('Error loading glossary file: ' + error.message);
+                    console.error('Upload error:', error);
+                }
+
+                event.target.value = ''; // Reset file input
+            };
+
+            reader.readAsText(file);
         }
 
         async function startTranslation() {
