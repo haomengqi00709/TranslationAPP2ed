@@ -209,7 +209,14 @@
             margin: 20px 0;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
+            overflow: visible;
+            position: relative;
+        }
+
+        .glossary-header-wrapper {
+            position: relative;
             overflow: hidden;
+            border-radius: 8px 8px 0 0;
         }
 
         .glossary-header {
@@ -412,7 +419,9 @@
         }
 
         .glossary-help {
-            display: inline-block;
+            position: absolute;
+            top: 12px;
+            left: 165px;
             width: 16px;
             height: 16px;
             background: #667eea;
@@ -422,9 +431,8 @@
             font-weight: bold;
             text-align: center;
             line-height: 16px;
-            margin-left: 8px;
             cursor: help;
-            position: relative;
+            z-index: 100;
         }
 
         .glossary-help:hover::after {
@@ -441,8 +449,9 @@
             font-weight: normal;
             white-space: normal;
             max-width: 280px;
+            width: 280px;
             text-align: left;
-            z-index: 10000;
+            z-index: 10001;
             box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             pointer-events: none;
         }
@@ -455,7 +464,7 @@
             transform: translateY(-50%);
             border: 6px solid transparent;
             border-right-color: #333;
-            z-index: 10000;
+            z-index: 10001;
             pointer-events: none;
         }
 
@@ -525,13 +534,15 @@
 
             <!-- Glossary Section -->
             <div class="glossary-section">
-                <div class="glossary-header" onclick="toggleGlossary()">
-                    <h3>
-                        📖 Custom Glossary
-                        <span class="glossary-help" data-tooltip="Put in your special translation needs, for example your team name" onclick="event.stopPropagation()">?</span>
-                        <span class="glossary-count" id="glossaryCount">0 terms</span>
-                    </h3>
-                    <span class="glossary-toggle" id="glossaryToggle">▼ Show</span>
+                <span class="glossary-help" data-tooltip="Put in your special translation needs, for example your team name">?</span>
+                <div class="glossary-header-wrapper">
+                    <div class="glossary-header" onclick="toggleGlossary()">
+                        <h3>
+                            📖 Custom Glossary
+                            <span class="glossary-count" id="glossaryCount">0 terms</span>
+                        </h3>
+                        <span class="glossary-toggle" id="glossaryToggle">▼ Show</span>
+                    </div>
                 </div>
                 <div class="glossary-content" id="glossaryContent">
                     <div class="glossary-actions">
