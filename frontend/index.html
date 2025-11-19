@@ -430,32 +430,32 @@
         .glossary-help:hover::after {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: calc(100% + 10px);
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50%;
+            left: calc(100% + 10px);
+            transform: translateY(-50%);
             background: #333;
             color: white;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: normal;
             white-space: normal;
-            max-width: 220px;
+            max-width: 280px;
             text-align: left;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
             pointer-events: none;
         }
 
         .glossary-help:hover::before {
             content: '';
             position: absolute;
-            bottom: calc(100% + 4px);
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50%;
+            left: calc(100% + 4px);
+            transform: translateY(-50%);
             border: 6px solid transparent;
-            border-top-color: #333;
-            z-index: 1000;
+            border-right-color: #333;
+            z-index: 10000;
             pointer-events: none;
         }
 
