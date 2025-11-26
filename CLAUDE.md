@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a modular PowerPoint translation system that uses BERT-based phrase alignment to preserve formatting when translating presentations. The system translates at the paragraph level for better context while redistributing formatting from source to target text using semantic alignment.
+This is a modular PowerPoint translation system that uses **LLM-based or BERT-based** alignment to preserve formatting when translating presentations. The system translates at the paragraph level for better context while redistributing formatting from source to target text using semantic alignment.
 
 **Key capabilities**:
 - Translates PowerPoint presentations while preserving text formatting (bold, italic, fonts, colors, hyperlinks)
 - Supports multiple translation backends: Local LLMs (HuggingFace), OpenAI GPT, Anthropic Claude
-- Uses BERT embeddings for intelligent phrase-level alignment between source and target text
+- **Dual alignment modes**: LLM-based (better for glossary terms) or BERT-based (semantic similarity)
+- **Glossary support**: Pre-replacement of terminology before translation for consistency
 - Handles tables and charts (in addition to standard text)
+- **Memory efficient**: Shares translator instances to prevent GPU OOM on large models
 
 ## Architecture
 
@@ -32,11 +34,25 @@ Extract → Translate → Align → Update
    - Uses adapter pattern with `BaseTranslator` interface
    - Outputs: `temp/translated_paragraphs.jsonl`
 
-3. **BERT Alignment** (`apply_alignment.py`):
-   - Maps formatting from source runs to target text using phrase-level alignment
+3. **Alignment** (configurable: BERT or LLM):
+
+   **Option A: BERT Alignment** (`apply_alignment.py`):
+   - Maps formatting from source runs to target text using semantic similarity
    - Uses `PowerPointBERTAligner` from `bert_alignment.py`
-   - Generates phrase embeddings and computes similarity scores
-   - Outputs: `temp/aligned_runs.jsonl`
+   - Generates phrase embeddings and computes cosine similarity
+   - Good for general formatting preservation
+
+   **Option B: LLM Alignment** (`apply_llm_alignment.py`):
+   - Uses LLM to map formatted source terms to target equivalents
+   - Processes each formatted run individually for accuracy
+   - Better for glossary-based formatting (e.g., bold terms in glossary)
+   - **Memory efficient**: Shares translator with translation step (no duplicate LLM loading)
+   - Includes fixes for:
+     - Whitespace filtering (prevents color bleeding from formatted spaces)
+     - Theme color consistency (excludes theme:BACKGROUND from special formatting)
+     - Enhanced emphasis detection (captures size/font differences, hyperlinks)
+
+   Both output: `temp/aligned_runs.jsonl`
 
 4. **PPTX Update** (`update_pptx.py`):
    - Writes aligned runs back to PowerPoint presentation
@@ -72,7 +88,19 @@ python pipeline.py input.pptx output.pptx
 # With specific translator
 python pipeline.py input.pptx output.pptx --translator openai
 
-# With context (glossary/terminology)
+# With LLM alignment (better for glossary formatting)
+python pipeline.py input.pptx output.pptx --alignment llm
+
+# With glossary file
+python pipeline.py input.pptx output.pptx --glossary glossary.json
+
+# Complete example: LLM alignment + glossary + verbose
+python pipeline.py input.pptx output.pptx \
+  --alignment llm \
+  --glossary glossary.json \
+  --verbose
+
+# With context (additional terminology instructions)
 python pipeline.py input.pptx output.pptx --context "Important: Senate = Sénat"
 
 # Verbose mode with intermediate files kept
@@ -182,6 +210,73 @@ The `PowerPointBERTAligner` class (`bert_alignment.py`) performs phrase-aware al
 
 **Important**: The `phrase_mappings` dictionary in `PowerPointBERTAligner.__init__()` contains hand-crafted English-French phrase pairs. Add entries here to improve alignment quality for specific terminology.
 
+## LLM Alignment Details
+
+The `LLMFormattingAligner` class (`llm_formatting_aligner.py`) performs LLM-based alignment with several key optimizations:
+
+### Architecture
+
+1. **Enhanced Formatting Detection** (`extract_formatted_runs`):
+   - Detects traditional formatting (bold, italic, underline, color)
+   - Captures emphasis via **size/font differences** from paragraph baseline
+   - Always preserves **hyperlinks**
+   - **Filters whitespace-only runs** to prevent formatting bleeding
+
+2. **Baseline Detection**:
+   - Determines most common font and size in paragraph
+   - Runs with different size/font are treated as emphasized
+   - Allows detection of formatting that inheritance-based extraction might miss
+
+3. **Individual Term Mapping** (`ask_llm_for_mapping_individual`):
+   - Processes each formatted term separately
+   - LLM maps source term to its equivalent in target translation
+   - More accurate than batch processing
+
+4. **Format Application** (`build_aligned_runs`):
+   - Applies formatting to matched target phrases
+   - Handles overlaps and gaps
+   - Merges consecutive runs with identical formatting
+
+### Critical Fixes (v11)
+
+**Fix 1: Whitespace Filtering**
+- Problem: Space characters with colors caused formatting to bleed
+- Solution: Skip `run.get("text", "").strip()` empty runs in extraction
+- Impact: Prevents colored spaces from extending formatting incorrectly
+
+**Fix 2: Theme Color Consistency**
+- Problem: `theme:BACKGROUND` colors incorrectly marked as special
+- Solution: Exclude theme background colors in both extraction and base format detection
+- Impact: Correct base format detection, no false positives
+
+**Fix 3: Translator Sharing** (Memory Optimization)
+- Problem: Pipeline loaded LLM twice (translation + alignment) → GPU OOM
+- Solution: `LLMAlignmentApplicator` accepts optional `translator` parameter to reuse existing instance
+- Impact: ~50% GPU memory savings, prevents OOM on 8B+ models
+
+### Usage
+
+```python
+from llm_formatting_aligner import LLMFormattingAligner
+from translators import LocalLLMTranslator
+
+# Option 1: Create new translator
+aligner = LLMFormattingAligner(translator_type="local")
+
+# Option 2: Share existing translator (recommended)
+translator = LocalLLMTranslator(...)
+aligner = LLMFormattingAligner(translator=translator)
+
+# Align runs
+aligned_runs, debug_info = aligner.align_paragraph_runs(
+    src_text="Source text",
+    tgt_text="Target text",
+    runs=source_runs,
+    source_lang="English",
+    target_lang="French"
+)
+```
+
 ## Adding a New Translator
 
 1. Create `translators/my_translator.py`:
@@ -217,10 +312,12 @@ Activate: `source myenv/bin/activate`
 
 ## Troubleshooting
 
-### Memory Issues
+### Memory Issues / GPU OOM
+- **Use LLM alignment with translator sharing** (v11 fix - prevents loading model twice)
+- Use API-based translator (OpenAI/Anthropic) instead of local LLM
 - Reduce `BERT_MAX_PHRASE_LENGTH` in config (fewer n-grams = less memory)
-- Set `BERT_DEVICE = "cpu"` instead of GPU
-- Use API-based translator instead of local LLM
+- Set `BERT_DEVICE = "cpu"` instead of GPU to free GPU for translator
+- For RunPod: Ensure only one worker per GPU
 
 ### Poor Alignment Quality
 - Increase `BERT_SIMILARITY_THRESHOLD` (more conservative matching)
@@ -242,6 +339,45 @@ Activate: `source myenv/bin/activate`
 ---
 
 ## Project Progress Log
+
+### 2025-11-25: LLM Alignment Fixes & Memory Optimization (v11)
+
+**✅ Completed Today:**
+
+1. **LLM Alignment Bug Fixes**
+   - **Whitespace filtering**: Prevents formatted spaces from causing color bleeding
+   - **Theme color consistency**: Fixed base format detection to exclude `theme:BACKGROUND` colors
+   - **Consecutive run merging**: Only merges truly adjacent runs (checks original indices)
+
+2. **Memory Optimization - Translator Sharing**
+   - Fixed GPU OOM issue on RunPod (was loading 2x 8B models)
+   - `LLMAlignmentApplicator` now accepts optional `translator` parameter
+   - Pipeline shares translator between translation and alignment steps
+   - **Result**: ~50% GPU memory savings, prevents OOM on large models
+
+3. **Enhanced CLI**
+   - Added `--glossary` argument to pipeline.py
+   - Supports loading glossary from JSON file
+   - Updated glossary format validation
+
+4. **Testing & Validation**
+   - Tested locally with glossary + LLM alignment
+   - Confirmed formatting preservation works correctly
+   - Verified no color bleeding issues
+
+**📝 Files Modified:**
+- `llm_formatting_aligner.py` - Whitespace filtering, theme color fixes
+- `apply_llm_alignment.py` - Translator sharing support
+- `pipeline.py` - Glossary CLI argument, translator sharing
+- `translation-glossary.json` - Format fix (wrapped in `{"entries": [...]}`)
+- `CLAUDE.md` - Documentation updates
+
+**🚀 Deployment:**
+- Docker: v11 (includes all fixes)
+- Ready for RunPod deployment
+- Railway auto-deploys from git push
+
+---
 
 ### 2025-10-23: Glossary System & API Planning
 

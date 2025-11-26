@@ -1,6 +1,6 @@
 """
-Main translation pipeline with BERT alignment
-Orchestrates: Extraction → Translation → BERT Alignment → PPTX Update
+Main translation pipeline with configurable alignment (BERT or LLM)
+Orchestrates: Extraction → Translation → Alignment → PPTX Update
 """
 
 import logging
@@ -13,6 +13,7 @@ import config
 from extract_content import ContentExtractor
 from translate_paragraphs import ParagraphTranslator
 from apply_alignment import AlignmentApplicator
+from apply_llm_alignment import LLMAlignmentApplicator
 from build_slide_context import SlideContextBuilder
 from translate_content import ContentTranslator
 from apply_table_alignment import TableAlignmentApplicator
@@ -32,22 +33,33 @@ logger = logging.getLogger(__name__)
 
 
 class TranslationPipeline:
-    """Main translation pipeline with BERT alignment."""
+    """Main translation pipeline with configurable alignment (BERT or LLM)."""
 
-    def __init__(self, translator_type: Optional[str] = None, glossary: Optional['TerminologyGlossary'] = None):
+    def __init__(
+        self,
+        translator_type: Optional[str] = None,
+        alignment_method: Optional[str] = None,
+        glossary: Optional['TerminologyGlossary'] = None
+    ):
         """
         Initialize translation pipeline.
 
         Args:
             translator_type: Type of translator to use ("local", "openai", "anthropic")
                            If None, uses config.TRANSLATOR_TYPE
+            alignment_method: Alignment method to use ("bert" or "llm")
+                            If None, uses config.ALIGNMENT_METHOD
             glossary: Optional TerminologyGlossary for consistent translations
         """
         self.translator_type = translator_type or config.TRANSLATOR_TYPE
+        self.alignment_method = alignment_method or config.ALIGNMENT_METHOD
         self.glossary = glossary
-        logger.info(f"Initializing translation pipeline with {self.translator_type} translator")
+
+        logger.info(f"Initializing translation pipeline:")
+        logger.info(f"  Translator: {self.translator_type}")
+        logger.info(f"  Alignment: {self.alignment_method}")
         if glossary:
-            logger.info(f"Glossary loaded with {len(glossary)} entries")
+            logger.info(f"  Glossary: {len(glossary)} entries")
 
         # Initialize components
         self.extractor = ContentExtractor()
@@ -55,7 +67,19 @@ class TranslationPipeline:
             translator_type=self.translator_type,
             glossary=self.glossary
         )
-        self.aligner = AlignmentApplicator(glossary=self.glossary)
+
+        # Initialize appropriate aligner based on method
+        if self.alignment_method == "llm":
+            logger.info("Using LLM-based alignment for formatted terms")
+            # Share the translator instance to save GPU memory (only one LLM loaded)
+            self.aligner = LLMAlignmentApplicator(translator=self.translator.translator)
+            # For tables, still use BERT (LLM alignment is optimized for formatted terms)
+            self.table_aligner = TableAlignmentApplicator(glossary=self.glossary)
+        else:  # bert or default
+            logger.info("Using BERT-based alignment (semantic similarity)")
+            self.aligner = AlignmentApplicator(glossary=self.glossary)
+            self.table_aligner = TableAlignmentApplicator(glossary=self.glossary)
+
         self.context_builder = SlideContextBuilder()
 
         # Reuse the same translator instance to save GPU memory
@@ -65,7 +89,6 @@ class TranslationPipeline:
             glossary=self.glossary,
             shared_translator=self.translator.translator  # Share the underlying translator
         )
-        self.table_aligner = TableAlignmentApplicator(glossary=self.glossary)
         self.updater = PowerPointUpdater()
 
     def run(
@@ -216,8 +239,9 @@ class TranslationPipeline:
                 logger.warning(f"Could not collect translation pairs: {e}")
                 stats["translation_pairs"] = []
 
-            # Step 4: Apply BERT alignment to paragraphs
-            logger.info("\n[Step 4/10] Applying BERT alignment to paragraphs")
+            # Step 4: Apply alignment to paragraphs
+            alignment_label = "LLM" if self.alignment_method == "llm" else "BERT"
+            logger.info(f"\n[Step 4/10] Applying {alignment_label} alignment to paragraphs")
             step_start = time.time()
 
             aligned_paragraphs = str(config.ALIGNED_RUNS_JSONL)
@@ -226,9 +250,10 @@ class TranslationPipeline:
             step_time = time.time() - step_start
             stats["steps"]["align_paragraphs"] = {
                 "paragraphs": align_count,
+                "method": self.alignment_method,
                 "time_seconds": round(step_time, 2)
             }
-            logger.info(f"✓ Aligned {align_count} paragraphs in {step_time:.2f}s")
+            logger.info(f"✓ Aligned {align_count} paragraphs using {alignment_label} in {step_time:.2f}s")
 
             # Step 5: Build slide context
             logger.info("\n[Step 5/10] Building slide context")
@@ -390,7 +415,7 @@ def main():
     """Command-line interface for translation pipeline."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="PowerPoint Translation Pipeline with BERT Alignment")
+    parser = argparse.ArgumentParser(description="PowerPoint Translation Pipeline with Configurable Alignment")
     parser.add_argument("input", help="Input PowerPoint file (.pptx)")
     parser.add_argument("output", help="Output PowerPoint file (.pptx)")
     parser.add_argument(
@@ -400,8 +425,18 @@ def main():
         help="Translator type (default: from config)"
     )
     parser.add_argument(
+        "--alignment",
+        choices=["bert", "llm"],
+        default=None,
+        help="Alignment method: 'bert' for semantic similarity, 'llm' for LLM-based (default: from config)"
+    )
+    parser.add_argument(
         "--context",
         help="Optional context for translation (e.g., glossary terms)"
+    )
+    parser.add_argument(
+        "--glossary",
+        help="Path to glossary JSON file for consistent translations"
     )
     parser.add_argument(
         "--no-keep-intermediate",
@@ -422,8 +457,21 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
+    # Load glossary if provided
+    glossary = None
+    if args.glossary:
+        from glossary import TerminologyGlossary
+        glossary = TerminologyGlossary()
+        glossary.load_from_json(args.glossary)
+        glossary.compile()
+        logger.info(f"Loaded glossary from {args.glossary} with {len(glossary)} entries")
+
     # Run pipeline
-    pipeline = TranslationPipeline(translator_type=args.translator)
+    pipeline = TranslationPipeline(
+        translator_type=args.translator,
+        alignment_method=args.alignment,
+        glossary=glossary
+    )
     stats = pipeline.run(
         input_pptx=args.input,
         output_pptx=args.output,
@@ -441,7 +489,21 @@ def main():
     print(f"Total time:  {stats['total_time_seconds']}s")
     print("\nSteps:")
     for step_name, step_stats in stats["steps"].items():
-        print(f"  {step_name:12s}: {step_stats['paragraphs']:3d} paragraphs in {step_stats['time_seconds']:6.2f}s")
+        time_str = f"{step_stats['time_seconds']:6.2f}s"
+
+        # Build detail string based on what's available
+        details = []
+        if 'paragraphs' in step_stats:
+            details.append(f"{step_stats['paragraphs']} paragraphs")
+        if 'tables' in step_stats:
+            details.append(f"{step_stats['tables']} tables")
+        if 'charts' in step_stats:
+            details.append(f"{step_stats['charts']} charts")
+        if 'slides' in step_stats:
+            details.append(f"{step_stats['slides']} slides")
+
+        detail_str = ", ".join(details) if details else ""
+        print(f"  {step_name:20s}: {detail_str:30s} {time_str}")
     print("=" * 60)
 
 

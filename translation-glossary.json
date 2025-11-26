@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "source": "Legislative Branch",
+      "target": "Le Corps législatif",
+      "case_sensitive": false,
+      "priority": 10
+    },
+    {
+      "source": "Executive Branch",
+      "target": "L'Autorité dirigeante",
+      "case_sensitive": false,
+      "priority": 10
+    },
+    {
+      "source": "Judicial Branch",
+      "target": "Le Siège de justice",
+      "case_sensitive": false,
+      "priority": 10
+    }
+  ]
+}
