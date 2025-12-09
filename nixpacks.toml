@@ -1,0 +1,16 @@
+[phases.setup]
+aptPkgs = [
+  "libreoffice",
+  "libreoffice-writer",
+  "poppler-utils",
+  "chromium",
+  "chromium-driver",
+  "fonts-liberation",
+  "fonts-noto-cjk"
+]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt", "playwright install chromium"]
+
+[start]
+cmd = "uvicorn api:app --host 0.0.0.0 --port $PORT"
