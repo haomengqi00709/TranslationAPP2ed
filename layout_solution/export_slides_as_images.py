@@ -12,6 +12,11 @@ import shutil
 
 def check_libreoffice():
     """Check if LibreOffice is installed."""
+    # Try to find in PATH first (works for most systems including Railway/Nix)
+    libreoffice_cmd = shutil.which("libreoffice") or shutil.which("soffice")
+    if libreoffice_cmd:
+        return libreoffice_cmd
+
     # Common LibreOffice paths on different systems
     possible_paths = [
         "/Applications/LibreOffice.app/Contents/MacOS/soffice",  # macOS
@@ -25,10 +30,11 @@ def check_libreoffice():
         if Path(path).exists():
             return path
 
-    # Try to find in PATH
-    libreoffice_cmd = shutil.which("libreoffice") or shutil.which("soffice")
-    if libreoffice_cmd:
-        return libreoffice_cmd
+    # Search in Nix store (Railway/Nixpacks deployments)
+    import glob
+    nix_paths = glob.glob("/nix/store/*/bin/soffice")
+    if nix_paths:
+        return nix_paths[0]
 
     return None
 
