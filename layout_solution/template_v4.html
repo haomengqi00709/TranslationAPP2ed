@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document_title }}</title>
+    <style>
+        /* V2.0: Content-aware layouts with table support */
+        :root {
+            --primary-color: {{ primary_color }};
+            --text-dark: #333;
+            --text-light: #666;
+            --text-muted: #999;
+            --bg-gray: #f4f4f4;
+            --bg-white: #ffffff;
+            --border-color: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            background: var(--bg-gray);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        /* Cover page */
+        .cover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+            color: white;
+            padding: 80px 60px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .cover h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .cover .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .cover .metadata {
+            margin-top: 40px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Page container - single column layout (no preview) */
+        /* Option A: FIXED HEIGHT - All slides uniform like real PPT */
+        .page-container {
+            display: block; /* Single column, no flex */
+            background: var(--bg-white);
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 600px; /* Fixed height for all slides */
+        }
+
+        /* Section header variant - DARK THEME for visual impact */
+        .page-container.section_header-slide {
+            background-color: #1E3A8A; /* Deep navy blue */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .page-container.section_header-slide .ai-content {
+            justify-content: center;
+            text-align: center; /* Center-aligned for impact */
+        }
+
+        .page-container.section_header-slide h2 {
+            color: white;
+            font-size: 2.8em;
+            margin-bottom: 30px;
+            border: none;
+            text-align: center;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .page-container.section_header-slide .summary {
+            color: #BFDBFE; /* Light blue */
+            font-size: 1.3em;
+            text-align: center;
+            border: none;
+            background: transparent;
+            padding: 0;
+            font-style: normal;
+            font-weight: 300;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
+        /* Decorative background circle */
+        .page-container.section_header-slide::after {
+            content: "";
+            position: absolute;
+            top: -10%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Hide slide number badge on dark slides */
+        .page-container.section_header-slide .ai-content::before {
+            display: none;
+        }
+
+        /* Quote layout - asymmetric centered design for key insights */
+        .page-container.quote-slide {
+            background: linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .page-container.quote-slide .ai-content {
+            text-align: center;
+            justify-content: center;
+            padding: 80px 100px;
+        }
+
+        /* Hide slide number on quote slides */
+        .page-container.quote-slide .ai-content::before {
+            display: none;
+        }
+
+        .page-container.quote-slide h2 {
+            font-family: Georgia, serif; /* Serif font for elegance */
+            font-size: 1.3em;
+            color: #64748B;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* The quote text itself - huge and centered */
+        .quote-text {
+            font-family: Georgia, serif;
+            font-size: 2.2em;
+            font-style: italic;
+            color: #1E293B;
+            line-height: 1.5;
+            position: relative;
+            margin: 0 auto;
+            max-width: 90%;
+        }
+
+        /* Decorative quotation mark before */
+        .quote-text::before {
+            content: """;
+            display: block;
+            font-size: 4em;
+            color: #CBD5E1;
+            line-height: 0.5;
+            margin-bottom: 20px;
+            font-style: normal;
+        }
+
+        /* Optional decorative element */
+        .page-container.quote-slide::after {
+            content: "";
+            position: absolute;
+            bottom: -5%;
+            left: -5%;
+            width: 300px;
+            height: 300px;
+            background: rgba(37, 99, 235, 0.03);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Text slide variant - standard dual pane */
+        .page-container.text-slide {
+            /* Inherits fixed height from .page-container */
+        }
+
+        /* Table slide variant - optimized layout for data display */
+        .page-container.table-slide {
+            height: 600px;
+        }
+
+        .page-container.table-slide .ai-content {
+            padding: 35px 50px; /* Balanced padding for tables */
+            overflow: hidden; /* No scroll - everything must fit */
+        }
+
+        /* Hide slide preview - not needed for final PDF */
+        .slide-preview {
+            display: none;
+        }
+
+        .slide-number {
+            /* Moved to content area */
+        }
+
+        /* Content area - now full width */
+        .ai-content {
+            width: 100%;
+            height: 100%;
+            padding: 50px 60px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* No scroll */
+            position: relative;
+        }
+
+        /* Slide number badge in top-right corner */
+        .ai-content::before {
+            content: "Slide " attr(data-slide-number);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+            opacity: 0.3;
+        }
+
+        /* Add subtle scroll indicator for overflowing content */
+        .ai-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .ai-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .ai-content::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .ai-content::-webkit-scrollbar-thumb:hover {
+            background: #003d82;
+        }
+
+        .ai-content h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* Compact title for table slides */
+        .page-container.table-slide h2 {
+            font-size: 1.5em;
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        /* Summary one-liner */
+        .summary {
+            font-style: italic;
+            color: var(--text-light);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            margin-bottom: 25px;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        /* Smaller summary for table slides */
+        .page-container.table-slide .summary {
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        /* French bullet points (text slides) - Smart auto-scaling */
+        .ai-content ul.bullet-points {
+            list-style: none;
+            margin-bottom: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly; /* Distribute bullets evenly */
+        }
+
+        .ai-content ul.bullet-points li {
+            padding-left: 30px;
+            margin-bottom: clamp(10px, 2vh, 18px); /* Flexible spacing */
+            position: relative;
+            line-height: clamp(1.5, 1.6vw, 1.8); /* Adaptive line height */
+            color: var(--text-dark);
+            font-size: clamp(0.9em, 1.2vw, 1.05em); /* Auto-scale font */
+        }
+
+        .ai-content ul.bullet-points li:before {
+            content: "•";
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.5em;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        /* Two-column layout for dense slides (7+ bullets) */
+        .ai-content ul.bullet-points:has(li:nth-child(7)) {
+            column-count: 2;
+            column-gap: 40px;
+        }
+
+        /* Extra compact for very dense slides (10+ bullets) */
+        .ai-content ul.bullet-points:has(li:nth-child(10)) li {
+            font-size: clamp(0.85em, 1.1vw, 0.95em);
+            margin-bottom: clamp(8px, 1.5vh, 12px);
+            line-height: 1.5;
+        }
+
+        /* Tables (table slides) */
+        .data-tables {
+            margin-bottom: 30px;
+            display: grid;
+            /* Auto-layout: side-by-side for small tables, stack for large tables */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            align-items: start; /* Align tables to top when side-by-side */
+        }
+
+        .data-table {
+            /* Removed margin-bottom (handled by grid gap) */
+            overflow-x: auto;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* Professional table header */
+        .data-table th {
+            background-color: #F1F5F9; /* Light gray, not bold color */
+            color: #1E293B; /* Dark text */
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 2px solid #CBD5E1; /* Bottom border for separation */
+            border: none;
+        }
+
+        /* Table cells */
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #E2E8F0; /* Subtle borders */
+            color: #475569;
+            border-left: none;
+            border-right: none;
+        }
+
+        /* Zebra striping - subtle alternating rows */
+        .data-table tbody tr:nth-child(even) {
+            background-color: #FAFAFA; /* Very light gray */
+        }
+
+        /* First column (usually labels) - make bold */
+        .data-table td:first-child {
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        /* Hover effect for interactivity */
+        .data-table tbody tr:hover {
+            background-color: #F0F9FF; /* Light blue on hover */
+        }
+
+        /* Citation footer */
+        .citation {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* Footer */
+        .document-footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+
+        .document-footer .powered-by {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        /* Print optimization */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .page-container {
+                page-break-inside: avoid;
+                margin-bottom: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .cover {
+                page-break-after: always;
+            }
+        }
+
+        /* ==========================================
+           V4 PROFESSIONAL LAYOUTS
+           ========================================== */
+
+        /* Clean Accent Cards - SINGLE ROW LAYOUTS (MAX 4 CARDS) */
+        .clean-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Default: 2 columns */
+            gap: 20px; /* Default spacing */
+            flex: 1;
+            margin-bottom: 20px;
+            align-content: start;
+        }
+
+        /* 2 cards: Side by side (1×2) */
+        .clean-cards-grid:has(.clean-card:nth-child(2):last-child) {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(2):last-child) .clean-card {
+            padding: 32px 28px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(2):last-child) .clean-card-number {
+            font-size: 3.5em; /* Largest - only 2 numbers */
+        }
+
+        /* 3 cards: One row across (1×3) */
+        .clean-cards-grid:has(.clean-card:nth-child(3):last-child) {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(3):last-child) .clean-card {
+            padding: 28px 24px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(3):last-child) .clean-card-number {
+            font-size: 3em;
+        }
+
+        /* 4 cards: One row across (1×4) - FULL WIDTH */
+        .clean-cards-grid:has(.clean-card:nth-child(4):last-child) {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(4):last-child) .clean-card {
+            padding: 24px 20px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(4):last-child) .clean-card-number {
+            font-size: 2.6em;
+        }
+
+        /* 5+ cards: ERROR - Should use styled_table instead */
+        .clean-cards-grid:has(.clean-card:nth-child(n+5))::before {
+            content: "⚠️ Warning: 5+ cards detected. This should use 'styled_table' layout instead.";
+            display: block;
+            background: #FEF3C7;
+            color: #92400E;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #F59E0B;
+            font-size: 0.85em;
+        }
+
+        /* If 5+ cards exist (shouldn't happen), fallback to compact grid */
+        .clean-cards-grid:has(.clean-card:nth-child(n+5)) {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(n+5)) .clean-card {
+            padding: 16px 14px;
+        }
+
+        .clean-cards-grid:has(.clean-card:nth-child(n+5)) .clean-card-number {
+            font-size: 2em;
+        }
+
+        /* Base card styling (applies to all sizes) */
+        .clean-card {
+            background: #F8FAFC; /* Very light gray background */
+            border-left: 5px solid #2563EB; /* Bold blue left border */
+            border-radius: 8px;
+            padding: 28px 24px; /* Default, overridden by count-specific rules */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Subtle shadow for depth */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .clean-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .clean-card-number {
+            font-size: 3em; /* Default, overridden by count-specific rules */
+            font-weight: 800;
+            color: #2563EB;
+            margin-bottom: 12px;
+            line-height: 1;
+            display: block;
+        }
+
+        .clean-card-label {
+            font-size: 0.9em;
+            color: #64748B;
+            line-height: 1.4;
+            font-weight: 600;
+            text-transform: uppercase; /* Professional uppercase labels */
+            letter-spacing: 0.5px;
+        }
+
+        .clean-card-sublabel {
+            font-size: 0.8em;
+            color: #94A3B8;
+            margin-top: 6px;
+            line-height: 1.3;
+            font-weight: 400;
+        }
+
+        /* ==========================================
+           CHART RENDERING STYLES
+           ========================================== */
+
+        .chart-container {
+            margin: 20px 0 30px 0;
+            padding: 20px;
+            background: #FAFAFA;
+            border-radius: 8px;
+            max-height: 450px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .chart-container canvas {
+            max-height: 400px !important;
+            max-width: 100% !important;
+        }
+
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #1E293B;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* ==========================================
+           EMPHASIS STYLING (Markdown Support)
+           ========================================== */
+
+        /* Italic - for key terms, roles, concepts */
+        em {
+            font-style: italic;
+            color: #2563EB; /* Subtle blue to draw attention */
+            font-weight: 500; /* Slightly bolder for visibility */
+        }
+
+        /* Bold - for critical findings, statistics */
+        strong {
+            font-weight: 700;
+            color: #1E293B; /* Dark for strong contrast */
+        }
+
+        /* Bold + Italic - maximum emphasis for THE key insight */
+        strong em,
+        em strong {
+            font-weight: 700;
+            font-style: italic;
+            color: var(--primary-color); /* Primary blue */
+            background: linear-gradient(180deg, transparent 60%, rgba(37, 99, 235, 0.1) 60%); /* Subtle highlight */
+            padding: 0 2px;
+        }
+
+        /* Emphasis in titles - more subtle */
+        h2 em {
+            color: inherit; /* Keep title color */
+            font-style: italic;
+            font-weight: inherit;
+        }
+
+        h2 strong {
+            font-weight: 600; /* Slightly bolder than normal */
+        }
+
+        /* Emphasis in summary boxes - blend with style */
+        .summary em {
+            color: #2563EB;
+            font-style: italic;
+        }
+
+        .summary strong {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .page-container {
+                flex-direction: column;
+                height: auto; /* Allow natural height on mobile */
+                min-height: 500px;
+            }
+
+            .page-container .slide-preview {
+                flex: 0 0 auto;
+                max-height: 250px;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .ai-content {
+                padding: 30px 25px;
+            }
+
+            .clean-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <!-- Chart.js Library for rendering charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Data Labels Plugin - shows values on charts (critical for PDF) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <!-- Register Chart.js DataLabels Plugin Globally (MUST be before any charts are created) -->
+    <script>
+        if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
+    </script>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover">
+        <h1>{{ cover_title }}</h1>
+        <div class="subtitle">{{ cover_subtitle }}</div>
+        <div class="metadata">
+            <p>{{ metadata }}</p>
+        </div>
+    </div>
+
+    <!-- Slide Pages -->
+    {% for slide in slides %}
+    <div class="page-container {{ slide.layout_type }}-slide">
+        <div class="ai-content" data-slide-number="{{ slide.id }}">
+            <h2>{{ slide.french_title | safe }}</h2>
+
+            {% if slide.summary_one_liner %}
+            <div class="summary">{{ slide.summary_one_liner | safe }}</div>
+            {% endif %}
+
+            <!-- Text bullets layout -->
+            {% if slide.layout_type == 'text_bullets' and slide.french_points %}
+            <ul class="bullet-points">
+                {% for point in slide.french_points %}
+                <li>{{ point | safe }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <!-- Clean accent cards layout (V4 Professional) -->
+            {% if slide.layout_type == 'clean_cards' and slide.cards %}
+            <div class="clean-cards-grid">
+                {% for card in slide.cards %}
+                <div class="clean-card">
+                    <div class="clean-card-number">{{ card.number }}</div>
+                    <div class="clean-card-label">{{ card.label | safe }}</div>
+                    {% if card.sublabel %}
+                    <div class="clean-card-sublabel">{{ card.sublabel | safe }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Styled table layout -->
+            {% if slide.layout_type == 'styled_table' and slide.translated_tables %}
+            <div class="data-tables">
+                {% for table in slide.translated_tables %}
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                {% for header in table.headers %}
+                                <th>{{ header | safe }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table.rows %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell | safe }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Quote layout (centered, asymmetric) -->
+            {% if slide.layout_type == 'quote' and slide.quote_text %}
+            <div class="quote-text">
+                {{ slide.quote_text | safe }}
+            </div>
+            {% endif %}
+
+            <!-- Bar Chart / Column Chart / Line Chart -->
+            {% if slide.layout_type in ['bar_chart', 'column_chart', 'line_chart'] and slide.chart_data %}
+            <div class="chart-container">
+                {% if slide.chart_data.title %}
+                <div class="chart-title">{{ slide.chart_data.title | safe }}</div>
+                {% endif %}
+                <canvas id="chart-{{ slide.id }}"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('chart-{{ slide.id }}').getContext('2d');
+                const chartType = '{{ slide.layout_type }}' === 'column_chart' ? 'bar' : '{{ slide.layout_type }}'.replace('_chart', '');
+
+                new Chart(ctx, {
+                    type: chartType,
+                    data: {{ slide.chart_data | tojson }},
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        {% if slide.layout_type == 'column_chart' %}
+                        indexAxis: 'y',
+                        {% endif %}
+                        plugins: {
+                            legend: {
+                                display: {{ 'true' if slide.chart_data.datasets|length > 1 else 'false' }},
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 }
+                                }
+                            },
+                            datalabels: {
+                                color: '#FFFFFF',
+                                font: {
+                                    weight: 'bold',
+                                    size: 13
+                                },
+                                formatter: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        },
+                        scales: {
+                            {% if slide.layout_type in ['bar_chart', 'column_chart'] %}
+                            x: {
+                                {% if slide.layout_type == 'column_chart' %}
+                                beginAtZero: true,
+                                {% endif %}
+                                title: {
+                                    display: {{ 'true' if slide.chart_data.x_axis_label else 'false' }},
+                                    text: '{{ slide.chart_data.x_axis_label | safe }}',
+                                    font: { size: 13, weight: 'bold' }
+                                },
+                                ticks: {
+                                    font: { size: 11 }
+                                }
+                            },
+                            y: {
+                                {% if slide.layout_type == 'bar_chart' %}
+                                beginAtZero: true,
+                                {% endif %}
+                                title: {
+                                    display: {{ 'true' if slide.chart_data.y_axis_label else 'false' }},
+                                    text: '{{ slide.chart_data.y_axis_label | safe }}',
+                                    font: { size: 13, weight: 'bold' }
+                                },
+                                ticks: {
+                                    font: { size: 11 }
+                                }
+                            }
+                            {% endif %}
+                        }
+                    }
+                });
+            })();
+            </script>
+            {% endif %}
+
+            <!-- Pie Chart / Doughnut Chart -->
+            {% if slide.layout_type == 'pie_chart' and slide.chart_data %}
+            <div class="chart-container">
+                {% if slide.chart_data.title %}
+                <div class="chart-title">{{ slide.chart_data.title | safe }}</div>
+                {% endif %}
+                <canvas id="chart-{{ slide.id }}"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('chart-{{ slide.id }}').getContext('2d');
+
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: {{ slide.chart_data.labels | tojson }},
+                        datasets: [{
+                            data: {{ slide.chart_data.data | tojson }},
+                            backgroundColor: {{ slide.chart_data.backgroundColor | tojson }} || [
+                                '#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 1.5,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 },
+                                    padding: 8,
+                                    boxWidth: 20
+                                }
+                            },
+                            datalabels: {
+                                color: '#1E293B',
+                                font: {
+                                    weight: 'bold',
+                                    size: 14
+                                },
+                                formatter: function(value, context) {
+                                    const label = context.chart.data.labels[context.dataIndex];
+                                    return label + '\n' + value + '%';
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })();
+            </script>
+            {% endif %}
+
+            <!-- Chart Image (fallback for complex charts) -->
+            {% if slide.layout_type == 'chart_image' and slide.charts %}
+            <div class="chart-container">
+                {% if slide.chart_caption %}
+                <p style="color: #64748B; font-style: italic; margin-bottom: 15px;">
+                    {{ slide.chart_caption | safe }}
+                </p>
+                {% endif %}
+                <img src="slides_images/slide{{ slide.source_id }}.png"
+                     alt="{{ slide.french_title }}"
+                     style="max-width: 100%; height: auto; border-radius: 4px;">
+            </div>
+            {% endif %}
+
+            <div class="citation">
+                Source: Slide {{ slide.id }} | Restructuré par IA
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Document Footer -->
+    <div class="document-footer">
+        <p>Document généré automatiquement avec traduction et restructuration par IA</p>
+        <p class="powered-by">⚡ Powered by Layout-Aware AI Engine V2.0</p>
+    </div>
+</body>
+</html>

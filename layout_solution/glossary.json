@@ -1,0 +1,29 @@
+{
+  "comment": "Official translations for organization names, programs, and key terms. Add entries as needed.",
+  "organizations": {
+    "Office of Public Service Accessibility": "Bureau de l'accessibilité de la fonction publique",
+    "OPSA": "BAFP",
+    "Treasury Board of Canada Secretariat": "Secrétariat du Conseil du Trésor du Canada",
+    "Federal Public Service": "fonction publique fédérale"
+  },
+  "programs": {
+    "Workplace Accommodations": "mesures d'adaptation en milieu de travail",
+    "Benchmarking Study": "étude comparative"
+  },
+  "terms": {
+    "Public Opinion Research": "recherche sur l'opinion publique",
+    "POR": "ROP",
+    "accommodation request": "demande de mesures d'adaptation",
+    "supervisor": "superviseur",
+    "employee": "employé",
+    "disability": "handicap",
+    "chronic health condition": "problème de santé chronique"
+  },
+  "instructions": {
+    "preserve_as_is": [
+      "Environics Research",
+      "Call-up Number: 24062-200341/001/CY"
+    ],
+    "note": "Company names, contract numbers, and technical codes should remain in English"
+  }
+}

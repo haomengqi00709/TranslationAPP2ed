@@ -1,0 +1,27 @@
+# PowerPoint to PDF Translation Pipeline - Python Dependencies
+
+# Core PowerPoint parsing
+python-pptx>=0.6.21
+
+# Image processing
+Pillow>=10.0.0
+pdf2image>=1.16.3
+
+# AI APIs
+google-generativeai>=0.3.0
+
+# Template rendering
+jinja2>=3.1.2
+
+# PDF export
+playwright>=1.40.0
+
+# API server
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Optional: Production WSGI server
+# gunicorn>=21.0.0

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint to PDF Translation - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1E293B;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #64748B;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 3px dashed #CBD5E1;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #F8FAFC;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #EEF2FF;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar-container {
+            background: #E2E8F0;
+            border-radius: 12px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: #1E293B;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .stage-indicators {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stage {
+            text-align: center;
+            padding: 15px 10px;
+            background: #F1F5F9;
+            border-radius: 8px;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .stage.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .stage.complete {
+            background: #10B981;
+            color: white;
+        }
+
+        .stage-number {
+            display: block;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-container.active {
+            display: block;
+        }
+
+        .success-message {
+            background: #ECFDF5;
+            border-left: 4px solid #10B981;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-message h3 {
+            color: #047857;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            background: #F8FAFC;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #64748B;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #1E293B;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #EEF2FF;
+        }
+
+        .error-message {
+            background: #FEE2E2;
+            border-left: 4px solid #EF4444;
+            padding: 20px;
+            border-radius: 8px;
+            color: #991B1B;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎨 AI-Powered PPT to PDF</h1>
+            <p class="subtitle">Upload your English PowerPoint and get a professionally formatted French PDF with recreated charts</p>
+
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <p style="font-size: 1.2em; margin-bottom: 10px;">Drop your PowerPoint file here</p>
+                <p style="color: #64748B; margin-bottom: 20px;">or</p>
+                <label for="fileInput" class="btn">Choose File</label>
+                <input type="file" id="fileInput" accept=".pptx,.ppt">
+                <p style="color: #94A3B8; margin-top: 20px; font-size: 0.9em;">Supports .pptx files</p>
+            </div>
+
+            <div id="fileName" style="margin-top: 20px; color: #64748B; display: none;"></div>
+
+            <button class="btn" id="uploadBtn" style="display: none; width: 100%;">
+                Start AI Translation
+            </button>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage">
+                <strong>Error:</strong> <span id="errorText"></span>
+            </div>
+
+            <!-- Progress Tracking -->
+            <div class="progress-container" id="progressContainer">
+                <h3 style="margin-bottom: 20px; color: #1E293B;">Processing Pipeline</h3>
+
+                <!-- Stage Indicators -->
+                <div class="stage-indicators">
+                    <div class="stage" id="stage1">
+                        <span class="stage-number">1</span>
+                        <span>Extract</span>
+                    </div>
+                    <div class="stage" id="stage2">
+                        <span class="stage-number">2</span>
+                        <span>Images</span>
+                    </div>
+                    <div class="stage" id="stage3">
+                        <span class="stage-number">3</span>
+                        <span>AI + Vision</span>
+                    </div>
+                    <div class="stage" id="stage4">
+                        <span class="stage-number">4</span>
+                        <span>Render</span>
+                    </div>
+                    <div class="stage" id="stage5">
+                        <span class="stage-number">5</span>
+                        <span>PDF</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+
+                <div class="progress-text" id="progressText">Initializing...</div>
+            </div>
+
+            <!-- Results -->
+            <div class="result-container" id="resultContainer">
+                <div class="success-message">
+                    <h3>✅ Translation Complete!</h3>
+                    <p>Your French PDF has been generated with AI-recreated charts</p>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Source Slides</div>
+                        <div class="stat-value" id="statSourceSlides">-</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Output Slides</div>
+                        <div class="stat-value" id="statOutputSlides">-</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Charts Recreated</div>
+                        <div class="stat-value" id="statCharts">-</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">PDF Size</div>
+                        <div class="stat-value" id="statSize">-</div>
+                    </div>
+                </div>
+
+                <div class="download-buttons">
+                    <button class="btn" id="downloadPdfBtn">
+                        📥 Download PDF
+                    </button>
+                    <button class="btn btn-secondary" id="downloadHtmlBtn">
+                        🌐 Download HTML
+                    </button>
+                </div>
+
+                <button class="btn" id="newUploadBtn" style="width: 100%; margin-top: 20px;">
+                    Upload Another File
+                </button>
+            </div>
+        </div>
+
+        <div class="card" style="background: rgba(255,255,255,0.95);">
+            <h3 style="margin-bottom: 15px;">🎯 What This Does</h3>
+            <ul style="color: #475569; line-height: 1.8;">
+                <li>✨ <strong>AI Vision Analysis:</strong> Extracts data from PowerPoint charts automatically</li>
+                <li>📊 <strong>Chart Recreation:</strong> Rebuilds charts with Chart.js (not images!)</li>
+                <li>🇫🇷 <strong>French Translation:</strong> Translates all content including chart labels</li>
+                <li>🎨 <strong>Professional Layout:</strong> AI chooses optimal layouts to prevent text overflow</li>
+                <li>📄 <strong>PDF-Ready Output:</strong> High-quality PDF with data labels visible</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let currentJobId = null;
+        let selectedFile = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.name.endsWith('.pptx') && !file.name.endsWith('.ppt')) {
+                showError('Please select a PowerPoint file (.pptx or .ppt)');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = `Selected: ${file.name}`;
+            fileName.style.display = 'block';
+            uploadBtn.style.display = 'block';
+            errorMessage.classList.remove('active');
+        }
+
+        // Upload and process
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            progressContainer.classList.add('active');
+            resultContainer.classList.remove('active');
+            errorMessage.classList.remove('active');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                // Start pipeline
+                const response = await fetch(`${API_BASE}/translate/pdf`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Upload failed');
+                }
+
+                currentJobId = data.job_id;
+                pollJobStatus();
+
+            } catch (error) {
+                showError(error.message);
+                uploadBtn.disabled = false;
+                progressContainer.classList.remove('active');
+            }
+        });
+
+        // Poll job status
+        async function pollJobStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/jobs/${currentJobId}/status`);
+                const job = await response.json();
+
+                updateProgress(job.progress);
+
+                if (job.status === 'completed') {
+                    showResults(job.result);
+                } else if (job.status === 'failed') {
+                    showError(job.result.error || 'Pipeline failed');
+                    uploadBtn.disabled = false;
+                } else {
+                    // Continue polling
+                    setTimeout(pollJobStatus, 1000);
+                }
+
+            } catch (error) {
+                showError('Failed to check job status');
+                uploadBtn.disabled = false;
+            }
+        }
+
+        // Update progress UI
+        function updateProgress(progress) {
+            const { current_stage, progress_percent, message } = progress;
+
+            document.getElementById('progressBar').style.width = `${progress_percent}%`;
+            document.getElementById('progressText').textContent = message;
+
+            // Update stage indicators
+            for (let i = 1; i <= 5; i++) {
+                const stage = document.getElementById(`stage${i}`);
+                if (i < current_stage) {
+                    stage.className = 'stage complete';
+                } else if (i === current_stage) {
+                    stage.className = 'stage active';
+                } else {
+                    stage.className = 'stage';
+                }
+            }
+        }
+
+        // Show results
+        function showResults(result) {
+            if (!result.success) {
+                showError(result.error);
+                return;
+            }
+
+            progressContainer.classList.remove('active');
+            resultContainer.classList.add('active');
+
+            const { stats } = result;
+            document.getElementById('statSourceSlides').textContent = stats.source_slides;
+            document.getElementById('statOutputSlides').textContent = stats.output_slides;
+            document.getElementById('statCharts').textContent = stats.chart_slides;
+            document.getElementById('statSize').textContent = `${stats.pdf_size_mb} MB`;
+        }
+
+        // Download buttons
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            window.open(`${API_BASE}/jobs/${currentJobId}/download?type=pdf`, '_blank');
+        });
+
+        document.getElementById('downloadHtmlBtn').addEventListener('click', () => {
+            window.open(`${API_BASE}/jobs/${currentJobId}/download?type=html`, '_blank');
+        });
+
+        document.getElementById('newUploadBtn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Error handling
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('active');
+        }
+    </script>
+</body>
+</html>

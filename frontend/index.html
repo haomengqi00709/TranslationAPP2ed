@@ -492,6 +492,47 @@
             opacity: 0.8;
         }
 
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-color: #5a67d8;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .glossary-help {
             position: absolute;
             top: 14px;
@@ -618,6 +659,19 @@
         <h1>PowerPoint Translation</h1>
         <p class="subtitle">Translate PowerPoint presentations while preserving formatting</p>
 
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('government')">
+                🏛️ Canadian Government
+            </button>
+            <button class="tab-btn" onclick="switchTab('international')">
+                🌍 International
+            </button>
+            <button class="tab-btn" onclick="switchTab('ultimate')">
+                ⭐ Ultimate Translation
+            </button>
+        </div>
+
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📄</div>
             <p><strong>Click to upload</strong> or drag and drop</p>
@@ -633,8 +687,7 @@
                 <div class="language-group">
                     <label for="sourceLang">Source Language</label>
                     <select id="sourceLang" onchange="updateGlossaryLabels()">
-                        <option value="English" selected>🇬🇧 English</option>
-                        <option value="French">🇫🇷 French (beta)</option>
+                        <!-- Options populated by JavaScript based on active tab -->
                     </select>
                 </div>
 
@@ -645,8 +698,7 @@
                 <div class="language-group">
                     <label for="targetLang">Target Language</label>
                     <select id="targetLang" onchange="updateGlossaryLabels()">
-                        <option value="French" selected>🇫🇷 French</option>
-                        <option value="English">🇬🇧 English (beta)</option>
+                        <!-- Options populated by JavaScript based on active tab -->
                     </select>
                 </div>
             </div>
@@ -743,7 +795,7 @@
 
     <script>
         // Display version info
-        document.getElementById('versionInfo').textContent = `v1.0.1 • API: ${window.location.hostname === 'localhost' ? 'localhost:8000' : 'Railway'} • Build: 2025-11-17`;
+        document.getElementById('versionInfo').textContent = `v1.1.0 • API: ${window.location.hostname === 'localhost' ? 'localhost:8000' : 'Railway'} • Build: 2025-12-06`;
     </script>
 
     <script>
@@ -751,10 +803,35 @@
         let currentJobId = null;
         let statusCheckInterval = null;
         let customGlossary = [];
+        let currentTab = 'government';  // Default tab
+
+        // Language configurations for different tabs
+        const LANGUAGE_CONFIG = {
+            government: {
+                "English": "🇬🇧 English",
+                "French": "🇫🇷 French"
+            },
+            international: {
+                "English": "🇬🇧 English",
+                "French": "🇫🇷 French",
+                "German": "🇩🇪 German",
+                "Italian": "🇮🇹 Italian",
+                "Japanese": "🇯🇵 Japanese",
+                "Chinese (Simplified)": "🇨🇳 Chinese (Simplified)"
+            },
+            ultimate: {
+                "English": "🇬🇧 English",
+                "French": "🇫🇷 French",
+                "German": "🇩🇪 German",
+                "Italian": "🇮🇹 Italian",
+                "Japanese": "🇯🇵 Japanese",
+                "Chinese (Simplified)": "🇨🇳 Chinese (Simplified)"
+            }
+        };
 
         // API Configuration - automatically detect local vs production
-        const APP_VERSION = 'v1.0.1';  // Update this when making changes
-        const BUILD_DATE = '2025-11-17';
+        const APP_VERSION = 'v1.1.0';  // Multi-language support (G7 languages)
+        const BUILD_DATE = '2025-12-06';
 
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:8000'  // Local development
@@ -806,12 +883,82 @@
             updateGlossaryLabels();
         }
 
-        // Initialize glossary labels on page load
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Populate languages for default tab (government)
+            populateLanguages('government');
             updateGlossaryLabels();
         });
         const statusDetails = document.getElementById('statusDetails');
         const progressFill = document.getElementById('progressFill');
+
+        // Tab switching function
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // Update tab button states
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes('Government') && tab === 'government') {
+                    btn.classList.add('active');
+                } else if (btn.textContent.includes('International') && tab === 'international') {
+                    btn.classList.add('active');
+                } else if (btn.textContent.includes('Ultimate') && tab === 'ultimate') {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Populate language dropdowns for the selected tab
+            populateLanguages(tab);
+        }
+
+        // Populate language dropdowns based on tab
+        function populateLanguages(tab) {
+            const sourceLang = document.getElementById('sourceLang');
+            const targetLang = document.getElementById('targetLang');
+            const languages = LANGUAGE_CONFIG[tab];
+
+            // Store current selections
+            const currentSource = sourceLang.value;
+            const currentTarget = targetLang.value;
+
+            // Clear existing options
+            sourceLang.innerHTML = '';
+            targetLang.innerHTML = '';
+
+            // Populate both dropdowns with all available languages
+            for (const [value, label] of Object.entries(languages)) {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = value;
+                sourceOption.textContent = label;
+                sourceLang.appendChild(sourceOption);
+
+                const targetOption = document.createElement('option');
+                targetOption.value = value;
+                targetOption.textContent = label;
+                targetLang.appendChild(targetOption);
+            }
+
+            // Restore selections if they exist in the new language set
+            if (languages[currentSource]) {
+                sourceLang.value = currentSource;
+            } else {
+                // Default to English for source
+                sourceLang.value = 'English';
+            }
+
+            if (languages[currentTarget]) {
+                targetLang.value = currentTarget;
+            } else {
+                // Default to French for target
+                targetLang.value = 'French';
+            }
+
+            // Update glossary labels
+            updateGlossaryLabels();
+        }
 
         // Upload area click
         uploadArea.addEventListener('click', () => fileInput.click());
@@ -1018,7 +1165,17 @@
             translateBtn.textContent = 'Uploading...';
 
             try {
-                const response = await fetch(`${API_URL}/api/translate?translator_type=${translator}&use_glossary=${useGlossary}&source_lang=${encodeURIComponent(sourceLang)}&target_lang=${encodeURIComponent(targetLang)}&context=${encodeURIComponent(context)}`, {
+                // Choose API endpoint based on current tab
+                let apiEndpoint;
+                if (currentTab === 'ultimate') {
+                    // Ultimate Translation endpoint (HTML + PDF output)
+                    apiEndpoint = `${API_URL}/api/translate/ultimate?use_glossary=${useGlossary}&source_lang=${encodeURIComponent(sourceLang)}&target_lang=${encodeURIComponent(targetLang)}`;
+                } else {
+                    // Standard translation endpoint (PowerPoint output)
+                    apiEndpoint = `${API_URL}/api/translate?translator_type=${translator}&use_glossary=${useGlossary}&source_lang=${encodeURIComponent(sourceLang)}&target_lang=${encodeURIComponent(targetLang)}&context=${encodeURIComponent(context)}`;
+                }
+
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     body: formData
                 });
@@ -1062,7 +1219,7 @@
                     clearInterval(statusCheckInterval);
                     document.getElementById('cancelBtn').style.display = 'none';
                     showStatus('completed', 'Translation complete!', '');
-                    showDownloadButton(currentJobId);
+                    showDownloadButton(currentJobId, data);
                     showTranslationPairs(data.translation_pairs || []);
                 } else if (data.status === 'failed') {
                     clearInterval(statusCheckInterval);
@@ -1122,15 +1279,39 @@
             progressFill.style.width = percent + '%';
         }
 
-        function showDownloadButton(jobId) {
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-btn';
-            downloadBtn.textContent = 'Download Translated File';
-            downloadBtn.onclick = () => {
-                window.location.href = `${API_URL}/api/download/${jobId}`;
-            };
+        function showDownloadButton(jobId, jobData) {
             statusDetails.innerHTML = '';
-            statusDetails.appendChild(downloadBtn);
+
+            // Check if this is an ultimate translation (has html_download_url and pdf_download_url)
+            if (jobData.html_download_url && jobData.pdf_download_url) {
+                // Ultimate Translation: Show HTML + PDF download buttons
+                const htmlBtn = document.createElement('button');
+                htmlBtn.className = 'download-btn';
+                htmlBtn.textContent = '📄 Download HTML';
+                htmlBtn.style.marginRight = '10px';
+                htmlBtn.onclick = () => {
+                    window.location.href = `${API_URL}${jobData.html_download_url}`;
+                };
+
+                const pdfBtn = document.createElement('button');
+                pdfBtn.className = 'download-btn';
+                pdfBtn.textContent = '📕 Download PDF';
+                pdfBtn.onclick = () => {
+                    window.location.href = `${API_URL}${jobData.pdf_download_url}`;
+                };
+
+                statusDetails.appendChild(htmlBtn);
+                statusDetails.appendChild(pdfBtn);
+            } else {
+                // Regular Translation: Show PowerPoint download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = 'Download Translated File';
+                downloadBtn.onclick = () => {
+                    window.location.href = `${API_URL}/api/download/${jobId}`;
+                };
+                statusDetails.appendChild(downloadBtn);
+            }
         }
 
         function showTranslationPairs(pairs) {

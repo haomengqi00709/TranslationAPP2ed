@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document_title }}</title>
+    <style>
+        /* V1.0 Core: Magazine-style CSS */
+        :root {
+            --primary-color: {{ primary_color }};
+            --text-dark: #333;
+            --text-light: #666;
+            --text-muted: #999;
+            --bg-gray: #f4f4f4;
+            --bg-white: #ffffff;
+            --border-color: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            background: var(--bg-gray);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        /* Cover page */
+        .cover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+            color: white;
+            padding: 80px 60px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .cover h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .cover .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .cover .metadata {
+            margin-top: 40px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Page container - dual pane layout */
+        .page-container {
+            display: flex;
+            background: var(--bg-white);
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 500px;
+            max-height: 650px;
+        }
+
+        /* Left: Original slide preview (35% width) */
+        .slide-preview {
+            flex: 0 0 35%;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+        }
+
+        .slide-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .slide-preview .placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        /* Right: AI content area (65% width) */
+        .ai-content {
+            flex: 1;
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .ai-content h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* Summary one-liner */
+        .summary {
+            font-style: italic;
+            color: var(--text-light);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            margin-bottom: 25px;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        /* French bullet points */
+        .ai-content ul {
+            list-style: none;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .ai-content li {
+            padding-left: 30px;
+            margin-bottom: 18px;
+            position: relative;
+            line-height: 1.8;
+            color: var(--text-dark);
+            font-size: 1.05em;
+        }
+
+        .ai-content li:before {
+            content: "•";
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.5em;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        /* Citation footer */
+        .citation {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* Footer */
+        .document-footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+
+        .document-footer .powered-by {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        /* Print optimization */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .page-container {
+                page-break-inside: avoid;
+                margin-bottom: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .cover {
+                page-break-after: always;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .page-container {
+                flex-direction: column;
+                max-height: none;
+            }
+
+            .slide-preview {
+                flex: 0 0 auto;
+                max-height: 300px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .ai-content {
+                padding: 30px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover">
+        <h1>{{ cover_title }}</h1>
+        <div class="subtitle">{{ cover_subtitle }}</div>
+        <div class="metadata">
+            <p>{{ metadata }}</p>
+        </div>
+    </div>
+
+    <!-- Slide Pages -->
+    {% for slide in slides %}
+    <div class="page-container">
+        <div class="slide-preview">
+            <span class="slide-number">Slide {{ slide.id }}</span>
+            {% if slide.original_img %}
+            <img src="{{ slide.original_img }}" alt="Slide {{ slide.id }} original">
+            {% else %}
+            <div class="placeholder">
+                <p>Original Slide {{ slide.id }}</p>
+                <p style="font-size: 0.9em; margin-top: 10px;">{{ slide.original_title[:60] }}...</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="ai-content">
+            <h2>{{ slide.french_title }}</h2>
+
+            {% if slide.summary_one_liner %}
+            <div class="summary">{{ slide.summary_one_liner }}</div>
+            {% endif %}
+
+            {% if slide.french_points %}
+            <ul>
+                {% for point in slide.french_points %}
+                <li>{{ point }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="citation">
+                Source: Slide {{ slide.id }} | Restructuré par IA
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Document Footer -->
+    <div class="document-footer">
+        <p>Document généré automatiquement avec traduction et restructuration par IA</p>
+        <p class="powered-by">⚡ Powered by Layout-Aware AI Engine</p>
+    </div>
+</body>
+</html>
